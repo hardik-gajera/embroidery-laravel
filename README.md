@@ -1,66 +1,204 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🧵 Aaradhya Design Gallery - Laravel App
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A comprehensive embroidery design marketplace built with Laravel, featuring both web interface and mobile API with OTP authentication.
 
-## About Laravel
+## 🚀 Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### 🌐 Web Application
+- **Admin Panel**: Complete design and category management
+- **Customer Portal**: Browse, purchase, and download designs
+- **Package System**: Subscription-based design downloads
+- **Payment Integration**: Razorpay payment gateway
+- **File Management**: Automatic design file handling
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 📱 Mobile API 
+- **OTP Authentication**: SMS-based login system
+- **REST API**: Complete mobile app backend
+- **Token Authentication**: Laravel Sanctum security
+- **Package Integration**: Free downloads for subscribers
+- **File Downloads**: Direct design file delivery
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 🛠️ Technology Stack
 
-## Learning Laravel
+- **Framework**: Laravel 10
+- **Database**: MySQL with Odoo integration
+- **Authentication**: Laravel Sanctum (API) + Session (Web)
+- **SMS Service**: Dovesoft API integration
+- **Payment**: Razorpay Gateway
+- **File Storage**: Laravel Storage with symlinks
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 📋 Requirements
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- PHP 8.1+
+- MySQL 5.7+
+- Composer
+- Node.js (for assets)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🔧 Installation
 
-## Laravel Sponsors
+### 1. Clone Repository
+```bash
+git clone https://github.com/yourusername/embroidery-laravel.git
+cd embroidery-laravel
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 2. Install Dependencies
+```bash
+composer install
+npm install && npm run build
+```
 
-### Premium Partners
+### 3. Environment Setup
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### 4. Database Configuration
+Update `.env` with your database credentials:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_DATABASE=embroidery
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
+```
 
-## Contributing
+### 5. SMS API Configuration
+```env
+SMS_API_URL=https://api.dovesoft.io/api/json/sendsms/
+SMS_API_KEY=your_sms_api_key
+SMS_SENDER_ID=ADGAPP
+SMS_ENTITY_ID=1701177339250153619
+SMS_TEMPLATE_ID=1707177389597272140
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 6. Run Migrations
+```bash
+php artisan migrate
+php artisan db:seed --class=AdminSeeder
+php artisan storage:link
+```
 
-## Code of Conduct
+## 🔗 API Documentation
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Base URLs
+- **Web**: `https://your-domain.com`
+- **Mobile API**: `https://your-domain.com/api/mobile`
 
-## Security Vulnerabilities
+### Authentication Flow
+1. **Send OTP**: `POST /api/mobile/send-otp`
+2. **Verify OTP**: `POST /api/mobile/verify-otp`  
+3. **Register** (if new): `POST /api/mobile/register`
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Key Endpoints
+- `GET /api/mobile/categories` - Browse categories
+- `GET /api/mobile/designs/featured` - Featured designs
+- `POST /api/mobile/buy-now` - Check purchase options
+- `POST /api/mobile/claim-design` - Free download via package
+- `GET /api/mobile/designs/{id}/download` - Download file
 
-## License
+## 📚 Documentation Files
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- `API_DOCUMENTATION.md` - Complete API reference
+- `OTP_IMPLEMENTATION_GUIDE.md` - OTP setup guide  
+- `HOSTINGER_DEPLOYMENT.md` - Production deployment
+- `ANDROID_API_README.md` - Mobile development guide
+
+## 🧪 Testing
+
+### Postman Collections
+- `Embroidery_OTP_API.postman_collection.json` - Complete API testing
+- `Embroidery_Android.postman_environment.json` - Environment variables
+
+### Test Scripts
+```bash
+# Test all endpoints
+./test_otp_api.sh
+
+# Prepare for deployment
+./deploy-prepare.sh
+```
+
+## 📱 Mobile App Integration
+
+### Android Flow
+1. **App Start** → Check stored token
+2. **No Token** → Mobile input → Send OTP → Verify OTP
+3. **New User** → Registration form → Get token
+4. **Existing User** → Direct login with token
+5. **Use Token** → All API calls
+
+### Package Logic
+- **Has Package + Downloads Left** → Free claim
+- **Package Exceeded** → Payment required  
+- **No Package** → Payment required
+
+## 🏗️ Project Structure
+
+```
+├── app/Http/Controllers/Api/     # Mobile API controllers
+├── app/Http/Controllers/         # Web controllers
+├── app/Models/                   # Eloquent models
+├── database/migrations/          # Database schema
+├── resources/views/              # Blade templates
+├── routes/api.php               # API routes
+├── routes/web.php               # Web routes
+├── config/sms.php               # SMS configuration
+└── public/storage/              # Design files
+```
+
+## 🔐 Security Features
+
+- **Token Authentication**: Sanctum-based API security
+- **Input Validation**: Comprehensive request validation
+- **SQL Injection Protection**: Eloquent ORM
+- **XSS Protection**: Blade template escaping
+- **CSRF Protection**: Laravel middleware
+- **Rate Limiting**: API request throttling
+
+## 🚢 Deployment
+
+### Production Setup
+1. **Run deployment script**: `./deploy-prepare.sh`
+2. **Upload to server**: Upload generated tar.gz
+3. **Configure environment**: Update .env for production
+4. **Run setup**: `./production-setup.sh`
+
+### Hostinger Deployment
+Complete guide available in `HOSTINGER_DEPLOYMENT.md`
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 📞 Support
+
+- **Documentation**: Check the `/docs` folder
+- **Issues**: Create GitHub issues for bugs
+- **API Testing**: Use provided Postman collections
+
+## 🎯 Key Features Summary
+
+- ✅ OTP-based mobile authentication
+- ✅ Complete design marketplace
+- ✅ Package subscription system
+- ✅ Odoo ERP integration
+- ✅ Razorpay payment gateway
+- ✅ File download management
+- ✅ Admin dashboard
+- ✅ Mobile-first API design
+- ✅ Production-ready deployment
+- ✅ Comprehensive documentation
+
+---
+
+**Built with ❤️ for Aaradhya Design Gallery**
