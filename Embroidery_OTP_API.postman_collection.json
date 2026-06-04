@@ -1,0 +1,554 @@
+{
+	"info": {
+		"_postman_id": "embroidery-otp-api-collection",
+		"name": "Embroidery Android API (OTP Based)",
+		"description": "Complete API collection for Embroidery Android app with OTP authentication",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "OTP Authentication",
+			"item": [
+				{
+					"name": "1. Send OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"mobile_no\": \"9876543210\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/send-otp",
+							"host": ["{{base_url}}"],
+							"path": ["send-otp"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data.user_exists !== undefined) {",
+									"        pm.environment.set('user_exists', response.data.user_exists);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "2. Verify OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"mobile_no\": \"9876543210\",\n    \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/verify-otp",
+							"host": ["{{base_url}}"],
+							"path": ["verify-otp"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success) {",
+									"        if (response.data.token) {",
+									"            pm.environment.set('auth_token', response.data.token);",
+									"            pm.environment.set('is_new_user', false);",
+									"        } else if (response.data.is_new_user) {",
+									"            pm.environment.set('is_new_user', true);",
+									"            pm.environment.set('mobile_verified', response.data.mobile_no);",
+									"        }",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "3. Complete Registration (New Users Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"mobile_no\": \"9876543210\",\n    \"password\": \"password123\",\n    \"password_confirmation\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/register",
+							"host": ["{{base_url}}"],
+							"path": ["register"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data.token) {",
+									"        pm.environment.set('auth_token', response.data.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/profile",
+							"host": ["{{base_url}}"],
+							"path": ["profile"]
+						}
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/logout",
+							"host": ["{{base_url}}"],
+							"path": ["logout"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Categories",
+			"item": [
+				{
+					"name": "Get All Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/categories",
+							"host": ["{{base_url}}"],
+							"path": ["categories"]
+						}
+					}
+				},
+				{
+					"name": "Get Category Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/categories/1",
+							"host": ["{{base_url}}"],
+							"path": ["categories", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get Category Designs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/categories/1/designs",
+							"host": ["{{base_url}}"],
+							"path": ["categories", "1", "designs"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Designs",
+			"item": [
+				{
+					"name": "Get All Designs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/designs?search=&category_id=",
+							"host": ["{{base_url}}"],
+							"path": ["designs"],
+							"query": [
+								{
+									"key": "search",
+									"value": ""
+								},
+								{
+									"key": "category_id",
+									"value": ""
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Featured Designs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/designs/featured",
+							"host": ["{{base_url}}"],
+							"path": ["designs", "featured"]
+						}
+					}
+				},
+				{
+					"name": "Get Design Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/designs/1",
+							"host": ["{{base_url}}"],
+							"path": ["designs", "1"]
+						}
+					}
+				},
+				{
+					"name": "Download Design",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/designs/1/download",
+							"host": ["{{base_url}}"],
+							"path": ["designs", "1", "download"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Cart",
+			"item": [
+				{
+					"name": "Get Cart",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/cart",
+							"host": ["{{base_url}}"],
+							"path": ["cart"]
+						}
+					}
+				},
+				{
+					"name": "Add to Cart",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"design_id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/cart/add",
+							"host": ["{{base_url}}"],
+							"path": ["cart", "add"]
+						}
+					}
+				},
+				{
+					"name": "Remove from Cart",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/cart/1",
+							"host": ["{{base_url}}"],
+							"path": ["cart", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Orders",
+			"item": [
+				{
+					"name": "Get My Designs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/my-designs",
+							"host": ["{{base_url}}"],
+							"path": ["my-designs"]
+						}
+					}
+				},
+				{
+					"name": "Buy Now Check",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"design_id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/buy-now",
+							"host": ["{{base_url}}"],
+							"path": ["buy-now"]
+						}
+					}
+				},
+				{
+					"name": "Claim Design Free",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"design_id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/claim-design",
+							"host": ["{{base_url}}"],
+							"path": ["claim-design"]
+						}
+					}
+				},
+				{
+					"name": "Payment Success",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"design_id\": 1,\n    \"amount\": 10.00,\n    \"razorpay_payment_id\": \"pay_test123\",\n    \"razorpay_order_id\": \"order_test123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/payment/success",
+							"host": ["{{base_url}}"],
+							"path": ["payment", "success"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Packages",
+			"item": [
+				{
+					"name": "Get All Packages",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/packages",
+							"host": ["{{base_url}}"],
+							"path": ["packages"]
+						}
+					}
+				},
+				{
+					"name": "Get Package Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/packages/1",
+							"host": ["{{base_url}}"],
+							"path": ["packages", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get My Packages",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/my-packages",
+							"host": ["{{base_url}}"],
+							"path": ["my-packages"]
+						}
+					}
+				},
+				{
+					"name": "Buy Package",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"package_id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/package/buy",
+							"host": ["{{base_url}}"],
+							"path": ["package", "buy"]
+						}
+					}
+				},
+				{
+					"name": "Package Payment Success",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"package_id\": 1,\n    \"amount\": 100.00,\n    \"razorpay_payment_id\": \"pay_test123\",\n    \"razorpay_order_id\": \"order_test123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/package/payment/success",
+							"host": ["{{base_url}}"],
+							"path": ["package", "payment", "success"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api/mobile"
+		},
+		{
+			"key": "auth_token",
+			"value": ""
+		},
+		{
+			"key": "user_exists",
+			"value": ""
+		},
+		{
+			"key": "is_new_user",
+			"value": ""
+		},
+		{
+			"key": "mobile_verified",
+			"value": ""
+		}
+	]
+}

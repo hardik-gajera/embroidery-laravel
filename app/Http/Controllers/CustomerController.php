@@ -1,0 +1,108 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Customer;
+use App\Models\CustomerPackagePurchase;
+use App\Http\Requests\StoreCustomerRequest;
+use App\Http\Requests\UpdateCustomerRequest;
+
+class CustomerController extends Controller
+{
+    public function index()
+    {
+        $query = Customer::with('package');
+
+        if ($search = request('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('mobile_no', 'like', "%{$search}%");
+            });
+        }
+
+        $customers = $query->latest()->paginate(10)->withQueryString();
+        return view('customers.index', compact('customers'));
+    }
+
+    public function create()
+    {
+        return view('customers.create');
+    }
+
+    public function store(StoreCustomerRequest $request)
+    {
+        Customer::create($request->validated());
+        return redirect()->route('customers.index')->with('success', 'Customer created successfully.');
+    }
+
+    public function show(Customer $customer)
+    {
+        $customer->load('package');
+        $packageOrders = $this->getPackageHistory($customer);
+        return view('customers.show', compact('customer', 'packageOrders'));
+    }
+
+    public function edit(Customer $customer)
+    {
+        $packageOrders = $this->getPackageHistory($customer);
+        return view('customers.edit', compact('customer', 'packageOrders'));
+    }
+
+    public function update(UpdateCustomerRequest $request, Customer $customer)
+    {
+        $data = $request->validated();
+        if (empty($data['password'])) {
+            unset($data['password']);
+        }
+        $customer->update($data);
+        return redirect()->route('customers.index')->with('success', 'Customer updated successfully.');
+    }
+
+    public function destroy(Customer $customer)
+    {
+        $customer->delete();
+        return redirect()->route('customers.index')->with('success', 'Customer deleted successfully.');
+    }
+
+    private function getPackageHistory(Customer $customer)
+    {
+        // Get from orders table (new purchases via Laravel)
+        $orders = \App\Models\Order::with('package')
+            ->where('customer_id', $customer->id)
+            ->whereNotNull('package_id')
+            ->latest()
+            ->get();
+
+        // Get from customer_package_purchases (migrated from Odoo)
+        $purchases = CustomerPackagePurchase::with('package')
+            ->where('customer_id', $customer->id)
+            ->latest('start_date')
+            ->get();
+
+        // Merge both into a unified collection
+        $merged = $orders->map(function ($order) {
+            return (object) [
+                'package' => $order->package,
+                'total' => $order->package->number_of_design ?? 0,
+                'downloaded' => 0,
+                'start_date' => $order->created_at,
+                'end_date' => $order->created_at?->addMonths($order->package->time_period ?? 0),
+                'amount' => $order->amount,
+                'source' => 'order',
+            ];
+        })->concat($purchases->map(function ($p) {
+            return (object) [
+                'package' => $p->package,
+                'total' => $p->total,
+                'downloaded' => $p->downloaded,
+                'start_date' => $p->start_date,
+                'end_date' => $p->end_date,
+                'amount' => $p->package->price ?? 0,
+                'source' => 'odoo',
+            ];
+        }))->sortByDesc('start_date')->values();
+
+        return $merged;
+    }
+}
