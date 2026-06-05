@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Embroidery - @yield('title')</title>
+    <title>{{ $appSettings['company_name'] ?? 'Embroidery' }} - @yield('title')</title>
+    @if($appSettings['logo'] ?? null)
+        <link rel="icon" href="{{ asset('storage/' . $appSettings['logo']) }}" type="image/png">
+    @endif
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -27,6 +30,22 @@
         @keyframes toastSlide { from { transform: translateX(120%); } to { transform: translateX(0); } }
         .toast-exit { animation: toastExit 0.3s ease forwards; }
         @keyframes toastExit { to { transform: translateX(120%); opacity: 0; } }
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 40px;
+            cursor: pointer;
+        }
+        select:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
     </style>
 </head>
 <body class="font-sans antialiased">
@@ -35,11 +54,13 @@
         <aside id="sidebar" class="sidebar-transition fixed inset-y-0 left-0 z-30 w-60 bg-sidebar text-white transform -translate-x-full md:translate-x-0 md:static md:inset-auto flex flex-col">
             <!-- Brand -->
             <div class="flex items-center gap-3 px-5 py-6">
-                <div class="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center text-sm font-bold text-white">
-                    EM
-                </div>
+                @if(($appSettings['logo'] ?? null))
+                    <img src="{{ asset('storage/' . $appSettings['logo']) }}" alt="Logo" class="w-10 h-10 object-contain rounded-xl">
+                @else
+                    <div class="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center text-sm font-bold text-white">EM</div>
+                @endif
                 <div>
-                    <h1 class="text-base font-heading font-bold">Embroidery</h1>
+                    <h1 class="text-base font-heading font-bold">{{ $appSettings['company_name'] ?? 'Embroidery' }}</h1>
                     <p class="text-[10px] text-primary-300 uppercase tracking-widest">Admin Panel</p>
                 </div>
                 <button onclick="toggleSidebar()" class="md:hidden ml-auto text-white/60 hover:text-white"><i class="fas fa-times"></i></button>
@@ -79,12 +100,20 @@
                             <i class="fas fa-receipt w-5 text-center text-sm"></i>
                             <span>Package History</span>
                         </a>
+                        <a href="{{ route('orders.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('orders.*') ? 'bg-primary-600 text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white' }}">
+                            <i class="fas fa-shopping-bag w-5 text-center text-sm"></i>
+                            <span>Orders</span>
+                        </a>
+                        <a href="{{ route('contact-messages.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('contact-messages.*') ? 'bg-primary-600 text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white' }}">
+                            <i class="fas fa-envelope w-5 text-center text-sm"></i>
+                            <span>Contact Messages</span>
+                        </a>
                     </div>
                 </div>
                 <div>
                     <p class="text-[10px] text-gray-400 uppercase tracking-widest font-semibold px-3 mb-2">System</p>
                     <div class="space-y-1">
-                        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white transition">
+                        <a href="{{ route('settings.edit') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('settings.*') ? 'bg-primary-600 text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white' }}">
                             <i class="fas fa-cog w-5 text-center text-sm"></i>
                             <span>Settings</span>
                         </a>
@@ -176,6 +205,7 @@
         }
         setTimeout(() => { const t = document.getElementById('toast'); if(t) { t.classList.add('toast-exit'); setTimeout(()=>t.remove(), 300); } }, 4000);
     </script>
+
     @stack('scripts')
 </body>
 </html>

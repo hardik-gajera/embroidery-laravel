@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Customer;
+use App\Models\ContactMessage;
 use Carbon\Carbon;
 
 class FrontendController extends Controller
@@ -27,6 +28,23 @@ class FrontendController extends Controller
     {
         $packages = DesignPackage::where('state', 'confirm')->get();
         return view('frontend.packages', compact('packages'));
+    }
+
+    public function about()
+    {
+        return view('frontend.about');
+    }
+
+    public function contact()
+    {
+        return view('frontend.contact');
+    }
+
+    public function contactSend(Request $request)
+    {
+        $request->validate(['name' => 'required', 'email' => 'required|email', 'message' => 'required']);
+        ContactMessage::create($request->only('name', 'email', 'message'));
+        return back()->with('success', 'Thank you! Your message has been sent.');
     }
 
     public function packageDetail($id)

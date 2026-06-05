@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Embroidery Designs - @yield('title', 'Home')</title>
+    <title>{{ $appSettings['company_name'] ?? 'Embroidery' }} - @yield('title', 'Home')</title>
+    @if($appSettings['logo'] ?? null)
+        <link rel="icon" href="{{ asset('storage/' . $appSettings['logo']) }}" type="image/png">
+    @endif
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -24,6 +27,21 @@
     </script>
     <style>
         [x-cloak] { display: none !important; }
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 40px;
+            cursor: pointer;
+        }
+        select:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
         .animate-fade-in { animation: fadeIn 0.5s ease-out; }
         .animate-slide-up { animation: slideUp 0.6s ease-out; }
         .animate-scale-in { animation: scaleIn 0.4s ease-out; }
@@ -53,8 +71,12 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <a href="{{ route('home') }}" class="flex items-center gap-2.5 group">
-                    <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-primary-200 group-hover:shadow-primary-300 transition-shadow">EM</div>
-                    <span class="text-lg font-heading font-bold text-gray-800">Embroidery</span>
+                    @if($appSettings['logo'])
+                        <img src="{{ asset('storage/' . $appSettings['logo']) }}" alt="{{ $appSettings['company_name'] }}" class="w-10 h-10 object-contain rounded-xl">
+                    @else
+                        <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-primary-200 group-hover:shadow-primary-300 transition-shadow">EM</div>
+                    @endif
+                    <span class="text-lg font-heading font-bold text-gray-800">{{ $appSettings['company_name'] }}</span>
                 </a>
 
                 <div class="hidden md:flex items-center gap-1">
@@ -62,6 +84,8 @@
                     <a href="{{ route('home') }}#categories" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">Categories</a>
                     <a href="{{ route('home') }}#designs" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">Designs</a>
                     <a href="{{ route('frontend.packages') }}" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">Packages</a>
+                    <a href="{{ route('frontend.about') }}" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">About Us</a>
+                    <a href="{{ route('frontend.contact') }}" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">Contact</a>
                 </div>
 
                 <div class="flex items-center gap-3">
@@ -121,6 +145,8 @@
                     <a href="{{ route('home') }}#categories" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">Categories</a>
                     <a href="{{ route('home') }}#designs" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">Designs</a>
                     <a href="{{ route('frontend.packages') }}" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">Packages</a>
+                    <a href="{{ route('frontend.about') }}" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">About Us</a>
+                    <a href="{{ route('frontend.contact') }}" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">Contact</a>
                     @if(session('customer_id'))
                     <a href="{{ route('frontend.my-designs') }}" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">My Designs</a>
                     <a href="{{ route('frontend.my-packages') }}" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">My Packages</a>
@@ -139,14 +165,18 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-10">
                 <div class="md:col-span-2">
                     <div class="flex items-center gap-2.5 mb-4">
-                        <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center text-white text-sm font-bold">EM</div>
-                        <span class="text-white font-heading font-bold text-lg">Embroidery</span>
+                        @if($appSettings['logo'])
+                            <img src="{{ asset('storage/' . $appSettings['logo']) }}" alt="{{ $appSettings['company_name'] }}" class="w-10 h-10 object-contain rounded-xl">
+                        @else
+                            <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center text-white text-sm font-bold">EM</div>
+                        @endif
+                        <span class="text-white font-heading font-bold text-lg">{{ $appSettings['company_name'] }}</span>
                     </div>
                     <p class="text-sm leading-relaxed max-w-sm">Premium embroidery designs for your creative projects. Download instantly and bring your ideas to life.</p>
                     <div class="flex gap-3 mt-5">
-                        <a href="#" class="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-primary-600 transition-all"><i class="fab fa-facebook-f text-sm"></i></a>
-                        <a href="#" class="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-primary-600 transition-all"><i class="fab fa-instagram text-sm"></i></a>
-                        <a href="#" class="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-primary-600 transition-all"><i class="fab fa-whatsapp text-sm"></i></a>
+                        <a href="{{ $appSettings['facebook_url'] }}" class="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-primary-600 transition-all"><i class="fab fa-facebook-f text-sm"></i></a>
+                        <a href="{{ $appSettings['instagram_url'] }}" class="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-primary-600 transition-all"><i class="fab fa-instagram text-sm"></i></a>
+                        <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $appSettings['whatsapp']) }}" class="w-9 h-9 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-primary-600 transition-all"><i class="fab fa-whatsapp text-sm"></i></a>
                     </div>
                 </div>
                 <div>
@@ -155,17 +185,20 @@
                         <a href="{{ route('home') }}" class="block hover:text-white hover:translate-x-1 transition-all">Home</a>
                         <a href="{{ route('home') }}#categories" class="block hover:text-white hover:translate-x-1 transition-all">Categories</a>
                         <a href="{{ route('frontend.packages') }}" class="block hover:text-white hover:translate-x-1 transition-all">Packages</a>
+                        <a href="{{ route('frontend.about') }}" class="block hover:text-white hover:translate-x-1 transition-all">About Us</a>
+                        <a href="{{ route('frontend.contact') }}" class="block hover:text-white hover:translate-x-1 transition-all">Contact Us</a>
                     </div>
                 </div>
                 <div>
                     <h4 class="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Contact</h4>
                     <div class="space-y-2.5 text-sm">
-                        <p><i class="fas fa-envelope mr-2 text-primary-400"></i>support@embroidery.com</p>
-                        <p><i class="fas fa-phone mr-2 text-primary-400"></i>+91 98765 43210</p>
+                        <p><i class="fas fa-envelope mr-2 text-primary-400"></i>{{ $appSettings['email'] }}</p>
+                        <p><i class="fas fa-phone mr-2 text-primary-400"></i>{{ $appSettings['mobile'] }}</p>
+                        <p><i class="fas fa-map-marker-alt mr-2 text-primary-400"></i>{{ $appSettings['address'] }}</p>
                     </div>
                 </div>
             </div>
-            <div class="border-t border-gray-800 mt-10 pt-6 text-center text-xs text-gray-500">© {{ date('Y') }} Embroidery Designs. All rights reserved.</div>
+            <div class="border-t border-gray-800 mt-10 pt-6 text-center text-xs text-gray-500">© {{ date('Y') }} {{ $appSettings['company_name'] }}. All rights reserved.</div>
         </div>
     </footer>
 

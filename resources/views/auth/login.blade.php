@@ -6,10 +6,12 @@
     <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
         <!-- Logo -->
         <div class="text-center mb-8">
-            <div class="w-16 h-16 bg-primary-50 text-primary-500 rounded-xl flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                EM
-            </div>
-            <h1 class="text-2xl font-heading font-bold text-gray-800">Embroidery</h1>
+            @if($appSettings['logo'] ?? null)
+                <img src="{{ asset('storage/' . $appSettings['logo']) }}" alt="{{ $appSettings['company_name'] ?? 'Logo' }}" class="w-16 h-16 object-contain mx-auto mb-4 rounded-xl">
+            @else
+                <div class="w-16 h-16 bg-primary-50 text-primary-500 rounded-xl flex items-center justify-center mx-auto mb-4 text-xl font-bold">EM</div>
+            @endif
+            <h1 class="text-2xl font-heading font-bold text-gray-800">{{ $appSettings['company_name'] ?? 'Embroidery' }}</h1>
             <p class="text-gray-400 text-sm mt-1">Sign in to your admin account</p>
         </div>
 

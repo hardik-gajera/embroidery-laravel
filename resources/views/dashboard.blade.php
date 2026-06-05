@@ -39,6 +39,49 @@
     </div>
 </div>
 
+<!-- Monthly Stats -->
+<div class="bg-white rounded-xl border border-gray-200 p-5 mb-8">
+    <div class="flex items-center justify-between mb-5">
+        <h3 class="text-base font-heading font-semibold text-gray-800">Monthly Overview</h3>
+        <form method="GET" class="flex items-center gap-2">
+            <input type="month" name="month" value="{{ $selectedMonth }}" onchange="this.form.submit()"
+                class="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-50 transition cursor-pointer">
+        </form>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-5 border border-blue-100">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-9 h-9 bg-blue-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-credit-card text-white text-sm"></i>
+                </div>
+                <span class="text-xs font-medium text-blue-600 uppercase tracking-wider">Razorpay Revenue</span>
+            </div>
+            <p class="text-2xl font-heading font-bold text-gray-800">₹{{ number_format($monthlyStats['razorpay_revenue'], 2) }}</p>
+            <p class="text-xs text-gray-500 mt-1">Direct payments this month</p>
+        </div>
+        <div class="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-xl p-5 border border-amber-100">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-9 h-9 bg-amber-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-box-open text-white text-sm"></i>
+                </div>
+                <span class="text-xs font-medium text-amber-600 uppercase tracking-wider">Package Downloads</span>
+            </div>
+            <p class="text-2xl font-heading font-bold text-gray-800">{{ number_format($monthlyStats['package_downloads']) }}</p>
+            <p class="text-xs text-gray-500 mt-1">Designs claimed via packages</p>
+        </div>
+        <div class="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl p-5 border border-purple-100">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-9 h-9 bg-purple-500 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-box text-white text-sm"></i>
+                </div>
+                <span class="text-xs font-medium text-purple-600 uppercase tracking-wider">Package Revenue</span>
+            </div>
+            <p class="text-2xl font-heading font-bold text-gray-800">₹{{ number_format($monthlyStats['package_revenue'], 2) }}</p>
+            <p class="text-xs text-gray-500 mt-1">Packages activated this month</p>
+        </div>
+    </div>
+</div>
+
 <!-- Recent Customers -->
 <div class="bg-white rounded-xl border border-gray-200">
     <div class="px-5 py-4 flex items-center justify-between">
