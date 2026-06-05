@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CustomerController;
@@ -13,6 +14,13 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\OrderController;
 
 // Frontend routes
+Route::get('/clear-cache', function() {
+    Artisan::call('route:clear');
+    Artisan::call('cache:clear');
+    Artisan::call('view:clear');
+    Artisan::call('config:clear');
+    return 'All caches cleared!';
+});
 Route::get('/', [FrontendController::class, 'home'])->name('home');
 Route::get('/category/{id}', [FrontendController::class, 'categories'])->name('frontend.categories');
 Route::get('/designs/{id}', [FrontendController::class, 'designs'])->name('frontend.designs');
