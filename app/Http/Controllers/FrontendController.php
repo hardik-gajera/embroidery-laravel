@@ -118,7 +118,9 @@ class FrontendController extends Controller
         if ($customer && Hash::check($request->password, $customer->password)) {
             session(['customer_id' => $customer->id, 'customer_name' => $customer->name]);
             session(['cart_count' => Cart::where('customer_id', $customer->id)->count()]);
-            return redirect()->intended('/')->with('success', 'Welcome back!');
+
+            $intended = session()->pull('url.intended', route('home'));
+            return redirect($intended)->with('success', 'Welcome back!');
         }
 
         return back()->withErrors(['email' => 'Invalid credentials.']);
@@ -155,6 +157,7 @@ class FrontendController extends Controller
     public function addToCart(Request $request)
     {
         if (!session('customer_id')) {
+            session(['url.intended' => url()->previous()]);
             return redirect()->route('frontend.login')->with('error', 'Please login first.');
         }
 
@@ -178,6 +181,7 @@ class FrontendController extends Controller
     public function buyNow(Request $request)
     {
         if (!session('customer_id')) {
+            session(['url.intended' => url()->previous()]);
             return redirect()->route('frontend.login');
         }
 

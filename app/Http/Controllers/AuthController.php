@@ -22,7 +22,7 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-            return redirect()->intended('/dashboard')->with('success', 'Welcome back!');
+            return redirect()->intended('/admin/dashboard')->with('success', 'Welcome back!');
         }
 
         return back()->withErrors(['email' => 'Invalid credentials.'])->onlyInput('email');
@@ -33,7 +33,7 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/login')->with('success', 'Logged out successfully.');
+        return redirect('/admin/login')->with('success', 'Logged out successfully.');
     }
 
     public function showForgotPassword()
