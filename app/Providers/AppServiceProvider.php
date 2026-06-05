@@ -16,16 +16,40 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        if (Schema::hasTable('settings')) {
+        try {
+            if (Schema::hasTable('settings')) {
+                View::share('appSettings', [
+                    'company_name' => Setting::get('company_name', 'Aaradhya Design Gallery'),
+                    'mobile' => Setting::get('mobile', '+91 98765 43210'),
+                    'email' => Setting::get('email', 'support@embroidery.com'),
+                    'address' => Setting::get('address', 'Surat, Gujarat, India'),
+                    'whatsapp' => Setting::get('whatsapp', '+91 98765 43210'),
+                    'facebook_url' => Setting::get('facebook_url', '#'),
+                    'instagram_url' => Setting::get('instagram_url', '#'),
+                    'logo' => Setting::get('logo'),
+                ]);
+            } else {
+                View::share('appSettings', [
+                    'company_name' => 'Aaradhya Design Gallery',
+                    'mobile' => '+91 98765 43210',
+                    'email' => 'support@embroidery.com',
+                    'address' => 'Surat, Gujarat, India',
+                    'whatsapp' => '+91 98765 43210',
+                    'facebook_url' => '#',
+                    'instagram_url' => '#',
+                    'logo' => null,
+                ]);
+            }
+        } catch (\Exception $e) {
             View::share('appSettings', [
-                'company_name' => Setting::get('company_name', 'Aaradhya Design Gallery'),
-                'mobile' => Setting::get('mobile', '+91 98765 43210'),
-                'email' => Setting::get('email', 'support@embroidery.com'),
-                'address' => Setting::get('address', 'Surat, Gujarat, India'),
-                'whatsapp' => Setting::get('whatsapp', '+91 98765 43210'),
-                'facebook_url' => Setting::get('facebook_url', '#'),
-                'instagram_url' => Setting::get('instagram_url', '#'),
-                'logo' => Setting::get('logo'),
+                'company_name' => 'Aaradhya Design Gallery',
+                'mobile' => '+91 98765 43210',
+                'email' => 'support@embroidery.com',
+                'address' => 'Surat, Gujarat, India',
+                'whatsapp' => '+91 98765 43210',
+                'facebook_url' => '#',
+                'instagram_url' => '#',
+                'logo' => null,
             ]);
         }
     }
