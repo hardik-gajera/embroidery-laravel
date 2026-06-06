@@ -21,7 +21,7 @@ use App\Http\Controllers\Api\PackageController;
 */
 
 // Public API routes
-Route::prefix('mobile')->group(function () {
+Route::middleware(['api', \App\Http\Middleware\ForceJsonResponse::class])->prefix('mobile')->group(function () {
     // OTP Authentication
     Route::post('/send-otp', [AuthController::class, 'sendOtp']);
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
@@ -39,7 +39,7 @@ Route::prefix('mobile')->group(function () {
 });
 
 // Protected API routes
-Route::middleware('auth:sanctum')->prefix('mobile')->group(function () {
+Route::middleware(['auth:sanctum', \App\Http\Middleware\ForceJsonResponse::class])->prefix('mobile')->group(function () {
     // Authentication
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [AuthController::class, 'profile']);

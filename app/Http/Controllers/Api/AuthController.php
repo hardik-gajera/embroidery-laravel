@@ -2,146 +2,152 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
-class AuthController extends Controller
+class AuthController extends BaseApiController
 {
     public function sendOtp(Request $request)
     {
-        $request->validate([
-            'mobile_no' => 'required|string|min:10|max:15',
-        ]);
+        try {
+            $validator = validator($request->all(), [
+                'mobile_no' => 'required|string|min:10|max:15',
+            ]);
 
-        $mobile = $request->mobile_no;
-        $otp = rand(100000, 999999);
-        
-        // Store OTP in cache for 10 minutes
-        Cache::put("otp_{$mobile}", $otp, 600);
-        
-        // Send SMS
-        $this->sendOtpSms($mobile, $otp);
-        
-        // Check if user exists
-        $userExists = Customer::where('mobile_no', $mobile)->exists();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'OTP sent successfully',
-            'data' => [
+            if ($validator->fails()) {
+                return $this->validationErrorResponse($validator->errors()->toArray());
+            }
+
+            $mobile = $request->mobile_no;
+            $otp = rand(100000, 999999);
+            
+            // Store OTP in cache for 10 minutes
+            Cache::put("otp_{$mobile}", $otp, 600);
+            
+            // Send SMS
+            $this->sendOtpSms($mobile, $otp);
+            
+            // Check if user exists
+            $userExists = Customer::where('mobile_no', $mobile)->exists();
+            
+            return $this->successResponse('OTP sent successfully', [
                 'user_exists' => $userExists,
                 'otp_sent' => true
-            ]
-        ]);
+            ]);
+        } catch (\Exception $e) {
+            return $this->handleException($e, 'Send OTP');
+        }
     }
 
     public function verifyOtp(Request $request)
     {
-        $request->validate([
-            'mobile_no' => 'required|string',
-            'otp' => 'required|string|size:6',
-        ]);
-
-        $mobile = $request->mobile_no;
-        $otp = $request->otp;
-        
-        $cachedOtp = Cache::get("otp_{$mobile}");
-        
-        if (!$cachedOtp || $cachedOtp != $otp) {
-            throw ValidationException::withMessages([
-                'otp' => ['Invalid or expired OTP.'],
+        try {
+            $validator = validator($request->all(), [
+                'mobile_no' => 'required|string',
+                'otp' => 'required|string|size:6',
             ]);
-        }
-        
-        // Clear OTP from cache
-        Cache::forget("otp_{$mobile}");
-        
-        // Check if user exists
-        $customer = Customer::where('mobile_no', $mobile)->first();
-        
-        if ($customer) {
-            // Existing user - login
-            $token = $customer->createToken('mobile-app')->plainTextToken;
+
+            if ($validator->fails()) {
+                return $this->validationErrorResponse($validator->errors()->toArray());
+            }
+
+            $mobile = $request->mobile_no;
+            $otp = $request->otp;
             
-            return response()->json([
-                'success' => true,
-                'message' => 'Login successful',
-                'data' => [
+            $cachedOtp = Cache::get("otp_{$mobile}");
+            
+            if (!$cachedOtp || $cachedOtp != $otp) {
+                return $this->errorResponse('Invalid or expired OTP', [], 400);
+            }
+            
+            // Clear OTP from cache
+            Cache::forget("otp_{$mobile}");
+            
+            // Check if user exists
+            $customer = Customer::where('mobile_no', $mobile)->first();
+            
+            if ($customer) {
+                // Existing user - login
+                $token = $customer->createToken('mobile-app')->plainTextToken;
+                
+                return $this->successResponse('Login successful', [
                     'customer' => $customer,
                     'token' => $token,
                     'is_new_user' => false
-                ]
-            ]);
-        } else {
-            // New user - needs registration
-            return response()->json([
-                'success' => true,
-                'message' => 'OTP verified. Please complete registration.',
-                'data' => [
+                ]);
+            } else {
+                // New user - needs registration
+                return $this->successResponse('OTP verified. Please complete registration.', [
                     'otp_verified' => true,
                     'is_new_user' => true,
                     'mobile_no' => $mobile
-                ]
-            ]);
+                ]);
+            }
+        } catch (\Exception $e) {
+            return $this->handleException($e, 'Verify OTP');
         }
     }
 
     public function register(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:customers,email',
-            'mobile_no' => 'required|string|max:15|unique:customers,mobile_no',
-            'password' => 'required|string|min:6|confirmed',
-        ]);
+        try {
+            $validator = validator($request->all(), [
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:customers,email',
+                'mobile_no' => 'required|string|max:15|unique:customers,mobile_no',
+                'password' => 'required|string|min:6|confirmed',
+            ]);
 
-        $customer = Customer::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'mobile_no' => $request->mobile_no,
-            'password' => $request->password,
-        ]);
-        
-        $token = $customer->createToken('mobile-app')->plainTextToken;
+            if ($validator->fails()) {
+                return $this->validationErrorResponse($validator->errors()->toArray());
+            }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Registration completed successfully',
-            'data' => [
+            $customer = Customer::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'mobile_no' => $request->mobile_no,
+                'password' => $request->password,
+            ]);
+            
+            $token = $customer->createToken('mobile-app')->plainTextToken;
+
+            return $this->successResponse('Registration completed successfully', [
                 'customer' => $customer,
                 'token' => $token,
-            ]
-        ]);
+            ]);
+        } catch (\Exception $e) {
+            return $this->handleException($e, 'Registration');
+        }
     }
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Logged out successfully'
-        ]);
+        try {
+            $request->user()->currentAccessToken()->delete();
+            return $this->successResponse('Logged out successfully');
+        } catch (\Exception $e) {
+            return $this->handleException($e, 'Logout');
+        }
     }
 
     public function profile(Request $request)
     {
-        $customer = $request->user();
-        
-        return response()->json([
-            'success' => true,
-            'data' => [
+        try {
+            $customer = $request->user();
+            
+            return $this->successResponse('Profile retrieved successfully', [
                 'customer' => $customer->load('package'),
                 'has_active_package' => $customer->hasActivePackage(),
                 'remaining_downloads' => $customer->hasActivePackage() ? 
                     ($customer->total_design - $customer->downloaded_design) : 0,
-            ]
-        ]);
+            ]);
+        } catch (\Exception $e) {
+            return $this->handleException($e, 'Get Profile');
+        }
     }
     
     private function sendOtpSms($mobile, $otp)
@@ -169,7 +175,7 @@ class AuthController extends Controller
             Http::withHeaders($headers)->post($config['sms_api']['url'], $payload);
         } catch (\Exception $e) {
             // Log error but don't fail the request
-            \Log::error('SMS sending failed: ' . $e->getMessage());
+            Log::error('SMS sending failed: ' . $e->getMessage());
         }
     }
 }
