@@ -43,11 +43,11 @@ class BaseApiController extends Controller
      */
     protected function validationErrorResponse(array $errors): JsonResponse
     {
+        $firstError = collect($errors)->flatten()->first();
+
         return response()->json([
             'success' => false,
-            'message' => 'Validation failed',
-            'errors' => array_values(collect($errors)->flatten()->toArray()),
-            'field_errors' => $errors
+            'message' => $firstError ?? 'Validation failed',
         ], 422);
     }
 
