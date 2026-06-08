@@ -124,6 +124,19 @@ class AuthController extends BaseApiController
         }
     }
 
+    public function checkSession(Request $request)
+    {
+        try {
+            $customer = $request->user();
+            return $this->successResponse('Session active', [
+                'customer' => $customer,
+                'is_active' => true
+            ]);
+        } catch (\Exception $e) {
+            return $this->handleException($e, 'Check Session');
+        }
+    }
+
     public function logout(Request $request)
     {
         try {

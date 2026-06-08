@@ -43,6 +43,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForceJsonResponse::class
     // Authentication
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [AuthController::class, 'profile']);
+    Route::get('/check-session', [AuthController::class, 'checkSession']);
     
     // Cart management
     Route::get('/cart', [CartController::class, 'index']);
