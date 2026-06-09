@@ -111,8 +111,12 @@
                         
                         <!-- Quick Action Buttons -->
                         <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="openGallery({{ $loop->index }})" 
+                                class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-600 hover:text-primary-600 transition-colors shadow-md mb-2" title="View Gallery">
+                                <i class="fas fa-images text-xs"></i>
+                            </button>
                             <a href="{{ route('frontend.design.detail', $design->id) }}" 
-                                class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-600 hover:text-primary-600 transition-colors shadow-md mb-2">
+                                class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-600 hover:text-primary-600 transition-colors shadow-md mb-2" title="View Details">
                                 <i class="fas fa-eye text-xs"></i>
                             </a>
                         </div>
@@ -189,7 +193,192 @@
     </div>
 </section>
 
+<!-- Image Gallery Popup -->
+<div id="galleryModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80">
+    <div class="relative max-w-5xl max-h-[90vh] w-full mx-4">
+        <!-- Close Button -->
+        <button onclick="closeGallery()" class="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors z-10">
+            <i class="fas fa-times text-2xl"></i>
+        </button>
+        
+        <!-- Main Image Container -->
+        <div class="relative bg-white rounded-2xl overflow-hidden shadow-2xl">
+            <!-- Image -->
+            <div class="aspect-[4/3] bg-gray-100 flex items-center justify-center overflow-hidden">
+                <img id="galleryImage" src="" alt="Design" class="w-full h-full object-cover">
+                <div id="noImagePlaceholder" class="hidden text-gray-400 text-center">
+                    <i class="fas fa-image text-6xl mb-4 block"></i>
+                    <p class="text-lg font-medium">No Image Available</p>
+                </div>
+            </div>
+            
+            <!-- Navigation Arrows -->
+            <button onclick="prevImage()" class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 rounded-full flex items-center justify-center text-gray-700 hover:bg-white hover:text-primary-600 transition-all shadow-lg" title="Previous">
+                <i class="fas fa-chevron-left text-lg"></i>
+            </button>
+            <button onclick="nextImage()" class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 rounded-full flex items-center justify-center text-gray-700 hover:bg-white hover:text-primary-600 transition-all shadow-lg" title="Next">
+                <i class="fas fa-chevron-right text-lg"></i>
+            </button>
+            
+            <!-- Design Info Overlay -->
+            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6 text-white">
+                <div class="flex items-end justify-between">
+                    <div class="flex-1">
+                        <h3 id="galleryTitle" class="text-xl font-heading font-bold mb-2"></h3>
+                        <div class="flex items-center gap-4 text-sm">
+                            <span id="galleryCode" class="bg-white/20 px-3 py-1 rounded-full font-mono"></span>
+                            <span id="galleryPrice" class="bg-primary-600 px-3 py-1 rounded-full font-semibold"></span>
+                            <span id="galleryCategory" class="bg-white/20 px-3 py-1 rounded-full"></span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 ml-4">
+                        <span id="galleryCounter" class="text-sm bg-white/20 px-3 py-1 rounded-full"></span>
+                        <a id="galleryViewButton" href="#" class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold transition-all hover:scale-105">
+                            <i class="fas fa-external-link-alt text-sm"></i>Go to Design
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Thumbnails Strip -->
+        <div class="mt-4 max-h-24 overflow-hidden">
+            <div id="thumbnailStrip" class="flex gap-2 justify-center">
+                <!-- Thumbnails will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+// Gallery functionality
+let currentDesigns = [];
+let currentIndex = 0;
+
+// Populate designs array from server data
+const designs = [
+    @foreach($designs as $design)
+    {
+        id: {{ $design->id }},
+        name: @json($design->name),
+        code: @json($design->design_code),
+        price: {{ $design->design_price }},
+        category: @json($design->category ? $design->category->name : ''),
+        image: @json($design->design_img ? asset('storage/' . $design->design_img) : ''),
+        url: @json(route('frontend.design.detail', $design->id))
+    }@if(!$loop->last),@endif
+    @endforeach
+];
+
+function openGallery(index) {
+    currentDesigns = designs;
+    currentIndex = index;
+    const modal = document.getElementById('galleryModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    updateGalleryContent();
+    generateThumbnails();
+    document.body.style.overflow = 'hidden';
+}
+
+function closeGallery() {
+    const modal = document.getElementById('galleryModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = 'auto';
+}
+
+function nextImage() {
+    currentIndex = (currentIndex + 1) % currentDesigns.length;
+    updateGalleryContent();
+    updateActiveThumbnail();
+}
+
+function prevImage() {
+    currentIndex = (currentIndex - 1 + currentDesigns.length) % currentDesigns.length;
+    updateGalleryContent();
+    updateActiveThumbnail();
+}
+
+function updateGalleryContent() {
+    const design = currentDesigns[currentIndex];
+    const galleryImage = document.getElementById('galleryImage');
+    const noImagePlaceholder = document.getElementById('noImagePlaceholder');
+    
+    if (design.image) {
+        galleryImage.src = design.image;
+        galleryImage.classList.remove('hidden');
+        noImagePlaceholder.classList.add('hidden');
+    } else {
+        galleryImage.classList.add('hidden');
+        noImagePlaceholder.classList.remove('hidden');
+    }
+    
+    document.getElementById('galleryTitle').textContent = design.name;
+    document.getElementById('galleryCode').textContent = design.code || 'No Code';
+    document.getElementById('galleryPrice').textContent = '₹' + new Intl.NumberFormat().format(design.price);
+    document.getElementById('galleryCategory').textContent = design.category || 'No Category';
+    document.getElementById('galleryCounter').textContent = `${currentIndex + 1} of ${currentDesigns.length}`;
+    document.getElementById('galleryViewButton').href = design.url;
+}
+
+function generateThumbnails() {
+    const thumbnailStrip = document.getElementById('thumbnailStrip');
+    thumbnailStrip.innerHTML = '';
+    
+    currentDesigns.forEach((design, index) => {
+        const thumb = document.createElement('div');
+        thumb.className = `w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${
+            index === currentIndex ? 'border-primary-500 ring-2 ring-primary-200' : 'border-transparent hover:border-gray-300'
+        }`;
+        thumb.onclick = () => {
+            currentIndex = index;
+            updateGalleryContent();
+            updateActiveThumbnail();
+        };
+        
+        if (design.image) {
+            thumb.innerHTML = `<img src="${design.image}" alt="${design.name}" class="w-full h-full object-cover">`;
+        } else {
+            thumb.innerHTML = `<div class="w-full h-full bg-gray-200 flex items-center justify-center"><i class="fas fa-image text-gray-400"></i></div>`;
+        }
+        
+        thumbnailStrip.appendChild(thumb);
+    });
+}
+
+function updateActiveThumbnail() {
+    const thumbnails = document.querySelectorAll('#thumbnailStrip > div');
+    thumbnails.forEach((thumb, index) => {
+        if (index === currentIndex) {
+            thumb.className = thumb.className.replace('border-transparent hover:border-gray-300', 'border-primary-500 ring-2 ring-primary-200');
+        } else {
+            thumb.className = thumb.className.replace('border-primary-500 ring-2 ring-primary-200', 'border-transparent hover:border-gray-300');
+        }
+    });
+}
+
+// Close modal on escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeGallery();
+    }
+    if (e.key === 'ArrowRight') {
+        nextImage();
+    }
+    if (e.key === 'ArrowLeft') {
+        prevImage();
+    }
+});
+
+// Close modal on outside click
+document.getElementById('galleryModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeGallery();
+    }
+});
+
+// View toggle functionality
 function setView(view) {
     const container = document.getElementById('designs-container');
     const gridBtn = document.getElementById('grid-btn');

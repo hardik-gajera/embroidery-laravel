@@ -46,7 +46,10 @@
                         Sign In
                     </button>
                 </form>
-                <p class="text-center text-sm text-gray-400 mt-6">Don't have an account? <a href="javascript:void(0)" onclick="showTab('register')" class="text-primary-600 font-semibold hover:text-primary-700">Create one</a></p>
+                <div class="text-center mt-4">
+                    <a href="{{ route('frontend.forgot-password') }}" class="text-sm text-primary-600 hover:text-primary-700 font-medium">Forgot Password?</a>
+                </div>
+                <p class="text-center text-sm text-gray-400 mt-4">Don't have an account? <a href="javascript:void(0)" onclick="showTab('register')" class="text-primary-600 font-semibold hover:text-primary-700">Create one</a></p>
             </div>
 
             <!-- Register Form -->

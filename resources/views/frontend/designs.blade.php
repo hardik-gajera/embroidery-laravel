@@ -2,68 +2,426 @@
 @section('title', $category->name . ' Designs')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-    <!-- Breadcrumb -->
-    <div class="flex items-center gap-2 text-sm text-gray-500 mb-8 animate-fade-in">
-        <a href="{{ route('home') }}" class="hover:text-primary-600 transition"><i class="fas fa-home"></i></a>
-        <i class="fas fa-chevron-right text-[10px] text-gray-300"></i>
-        @if($category->parent)
-            <a href="{{ route('frontend.categories', $category->parent->id) }}" class="hover:text-primary-600 transition">{{ $category->parent->name }}</a>
-            <i class="fas fa-chevron-right text-[10px] text-gray-300"></i>
-        @endif
-        <span class="text-gray-800 font-medium">{{ $category->name }}</span>
-    </div>
-
-    <div class="flex items-center justify-between mb-10 animate-slide-up">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-gradient-to-br from-primary-100 to-accent-100 rounded-xl flex items-center justify-center">
-                <i class="fas fa-swatchbook text-primary-600"></i>
-            </div>
-            <div>
-                <h1 class="text-2xl font-heading font-bold text-gray-800">{{ $category->name }}</h1>
-                <p class="text-sm text-gray-400">{{ $designs->total() }} designs available</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-        @forelse($designs as $design)
-        <a href="{{ route('frontend.design.detail', $design->id) }}" class="card-hover bg-white rounded-2xl overflow-hidden group">
-            @if($design->design_img)
-                <div class="aspect-[4/3] overflow-hidden">
-                    <img src="{{ asset('storage/' . $design->design_img) }}" alt="{{ $design->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                </div>
-            @else
-                <div class="aspect-[4/3] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-                    <i class="fas fa-swatchbook text-gray-600 text-3xl group-hover:scale-110 transition-transform"></i>
-                </div>
+<!-- Header Section -->
+<section class="bg-gradient-to-br from-primary-900 via-primary-800 to-purple-900 py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Breadcrumb -->
+        <div class="flex items-center gap-2 text-sm text-primary-200 mb-6">
+            <a href="{{ route('home') }}" class="hover:text-white transition"><i class="fas fa-home"></i></a>
+            <i class="fas fa-chevron-right text-[10px] text-primary-300"></i>
+            @if($category->parent)
+                <a href="{{ route('frontend.categories', $category->parent->id) }}" class="hover:text-white transition">{{ $category->parent->name }}</a>
+                <i class="fas fa-chevron-right text-[10px] text-primary-300"></i>
             @endif
-            <div class="p-4 flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-swatchbook text-green-500 text-sm"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <h3 class="font-semibold text-gray-800 text-sm truncate group-hover:text-primary-600 transition-colors">{{ $design->name }}</h3>
-                    <p class="text-xs text-gray-400 mt-0.5">₹{{ number_format($design->design_price) }} · {{ $design->stitches ? number_format($design->stitches) . ' stitches' : $design->design_format }}</p>
-                </div>
-                <i class="fas fa-chevron-right text-gray-300 text-xs group-hover:text-primary-500 group-hover:translate-x-1 transition-all"></i>
-            </div>
-        </a>
-        @empty
-        <div class="col-span-full text-center py-20">
-            <div class="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-swatchbook text-gray-300 text-3xl"></i>
-            </div>
-            <p class="font-medium text-gray-500">No designs in this category yet.</p>
-            <a href="{{ route('home') }}" class="inline-flex items-center gap-2 mt-4 text-sm text-primary-600 font-medium hover:text-primary-700">
-                <i class="fas fa-arrow-left text-xs"></i>Back to Home
-            </a>
+            <span class="text-white font-medium">{{ $category->name }}</span>
         </div>
-        @endforelse
+        
+        <div class="text-center">
+            <div class="flex items-center justify-center gap-4 mb-4">
+                <div class="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                    <i class="fas fa-swatchbook text-white text-2xl"></i>
+                </div>
+            </div>
+            <h1 class="text-4xl font-heading font-bold text-white mb-4">{{ $category->name }}</h1>
+            <p class="text-primary-200 text-lg">Explore {{ $designs->total() }} premium embroidery designs in this category</p>
+        </div>
     </div>
+</section>
 
-    @if($designs->hasPages())
-    <div class="mt-10 flex justify-center">{{ $designs->links() }}</div>
-    @endif
+<!-- Search & Filter Section -->
+<section class="bg-white py-8 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <form method="GET" action="{{ route('frontend.designs', $category->id) }}" class="flex flex-col md:flex-row gap-4 items-center">
+            <!-- Search Input -->
+            <div class="flex-1 max-w-md">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by design code or name..."
+                        class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-primary-500 focus:bg-white transition-all">
+                </div>
+            </div>
+
+            <!-- Sort Filter -->
+            <div class="w-full md:w-48">
+                <select name="sort" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-primary-500 transition-all">
+                    <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Latest First</option>
+                    <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Oldest First</option>
+                    <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>Price: Low to High</option>
+                    <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>Price: High to Low</option>
+                    <option value="name" {{ request('sort') == 'name' ? 'selected' : '' }}>Name A-Z</option>
+                </select>
+            </div>
+
+            <!-- Search Button -->
+            <button type="submit" class="px-8 py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-all hover:scale-105">
+                <i class="fas fa-search mr-2"></i>Search
+            </button>
+
+            <!-- Clear Filters -->
+            @if(request()->hasAny(['search', 'sort']))
+                <a href="{{ route('frontend.designs', $category->id) }}" class="px-4 py-3 text-gray-600 hover:text-primary-600 transition-colors">
+                    <i class="fas fa-times mr-1"></i>Clear
+                </a>
+            @endif
+        </form>
+    </div>
+</section>
+
+<!-- Results Section -->
+<section class="py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Results Info -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+            <div>
+                <h2 class="text-2xl font-heading font-bold text-gray-800">
+                    @if(request('search'))
+                        Search Results for "{{ request('search') }}" in {{ $category->name }}
+                    @else
+                        {{ $category->name }} Designs
+                    @endif
+                </h2>
+                <p class="text-gray-500 mt-1">{{ $designs->total() }} designs found</p>
+            </div>
+            
+            <!-- View Toggle -->
+            <div class="flex items-center gap-2 mt-4 md:mt-0">
+                <span class="text-sm text-gray-600">View:</span>
+                <div class="flex rounded-lg border border-gray-200 overflow-hidden">
+                    <button onclick="setView('grid')" id="grid-btn" class="px-3 py-1.5 text-sm bg-primary-600 text-white hover:bg-primary-700 transition-colors">
+                        <i class="fas fa-th"></i>
+                    </button>
+                    <button onclick="setView('list')" id="list-btn" class="px-3 py-1.5 text-sm bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        @if($designs->count() > 0)
+            <!-- Designs Grid -->
+            <div id="designs-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                @foreach($designs as $design)
+                <div class="design-card card-hover bg-white rounded-2xl overflow-hidden group flex flex-col h-full">
+                    <!-- Design Image -->
+                    <div class="relative">
+                        @if($design->design_img)
+                            <div class="aspect-[4/3] overflow-hidden">
+                                <img src="{{ asset('storage/' . $design->design_img) }}" alt="{{ $design->name }}" 
+                                    class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            </div>
+                        @else
+                            <div class="aspect-[4/3] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                                <i class="fas fa-swatchbook text-gray-600 text-3xl group-hover:scale-110 transition-transform"></i>
+                            </div>
+                        @endif
+                        
+                        <!-- Quick Action Buttons -->
+                        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="openGallery({{ $loop->index }})" 
+                                class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-600 hover:text-primary-600 transition-colors shadow-md mb-2" title="View Gallery">
+                                <i class="fas fa-images text-xs"></i>
+                            </button>
+                            <a href="{{ route('frontend.design.detail', $design->id) }}" 
+                                class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-600 hover:text-primary-600 transition-colors shadow-md mb-2" title="View Details">
+                                <i class="fas fa-eye text-xs"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Design Info - Flex grow to push buttons to bottom -->
+                    <div class="p-4 flex flex-col flex-grow">
+                        <a href="{{ route('frontend.design.detail', $design->id) }}" class="block">
+                            <h3 class="font-semibold text-gray-800 text-sm truncate group-hover:text-primary-600 transition-colors">
+                                {{ $design->name }}
+                            </h3>
+                        </a>
+                        
+                        @if($design->design_code)
+                            <p class="text-xs text-primary-500 font-medium mt-1">{{ $design->design_code }}</p>
+                        @endif
+                        
+                        <p class="text-sm font-bold text-gray-800 mt-2">₹{{ number_format($design->design_price) }}</p>
+                        
+                        @if($design->category)
+                            <p class="text-xs text-gray-400 mb-3">{{ $design->category->name }}</p>
+                        @else
+                            <div class="mb-3"></div>
+                        @endif
+
+                        <!-- Action Buttons - Always at bottom -->
+                        <div class="flex gap-2 mt-auto">
+                            @if(session('customer_id'))
+                                <!-- Buy Now Button -->
+                                <form action="{{ route('frontend.buy') }}" method="POST" class="flex-1">
+                                    @csrf
+                                    <input type="hidden" name="design_id" value="{{ $design->id }}">
+                                    <button type="submit" class="w-full px-3 py-2 bg-primary-600 text-white text-xs font-semibold rounded-lg hover:bg-primary-700 transition-all hover:scale-105">
+                                        <i class="fas fa-bolt mr-1"></i>Buy Now
+                                    </button>
+                                </form>
+
+                                <!-- Add to Cart Button -->
+                                <form action="{{ route('frontend.cart.add') }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="design_id" value="{{ $design->id }}">
+                                    <button type="submit" class="px-3 py-2 bg-gray-100 text-gray-700 hover:bg-primary-50 hover:text-primary-600 rounded-lg transition-all text-xs">
+                                        <i class="fas fa-cart-plus"></i>
+                                    </button>
+                                </form>
+                            @else
+                                <a href="{{ route('frontend.login') }}" class="flex-1 px-3 py-2 bg-primary-600 text-white text-xs font-semibold rounded-lg hover:bg-primary-700 transition-all hover:scale-105 text-center flex items-center justify-center">
+                                    <i class="fas fa-sign-in-alt mr-1"></i>Login to Buy
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+
+            <!-- Pagination -->
+            <div class="mt-12">
+                {{ $designs->appends(request()->query())->links('pagination::tailwind') }}
+            </div>
+        @else
+            <!-- No Results -->
+            <div class="text-center py-16">
+                <div class="w-24 h-24 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-search text-gray-300 text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-600 mb-2">No designs found</h3>
+                <p class="text-gray-500 mb-6">Try adjusting your search criteria or browse other categories.</p>
+                <div class="flex gap-3 justify-center">
+                    <a href="{{ route('frontend.designs', $category->id) }}" class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-all">
+                        <i class="fas fa-refresh"></i>View All in {{ $category->name }}
+                    </a>
+                    <a href="{{ route('home') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all">
+                        <i class="fas fa-arrow-left"></i>Back to Home
+                    </a>
+                </div>
+            </div>
+        @endif
+    </div>
+</section>
+
+<!-- Image Gallery Popup -->
+<div id="galleryModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80">
+    <div class="relative max-w-5xl max-h-[90vh] w-full mx-4">
+        <!-- Close Button -->
+        <button onclick="closeGallery()" class="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors z-10">
+            <i class="fas fa-times text-2xl"></i>
+        </button>
+        
+        <!-- Main Image Container -->
+        <div class="relative bg-white rounded-2xl overflow-hidden shadow-2xl">
+            <!-- Image -->
+            <div class="aspect-[4/3] bg-gray-100 flex items-center justify-center overflow-hidden">
+                <img id="galleryImage" src="" alt="Design" class="w-full h-full object-cover">
+                <div id="noImagePlaceholder" class="hidden text-gray-400 text-center">
+                    <i class="fas fa-image text-6xl mb-4 block"></i>
+                    <p class="text-lg font-medium">No Image Available</p>
+                </div>
+            </div>
+            
+            <!-- Navigation Arrows -->
+            <button onclick="prevImage()" class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 rounded-full flex items-center justify-center text-gray-700 hover:bg-white hover:text-primary-600 transition-all shadow-lg" title="Previous">
+                <i class="fas fa-chevron-left text-lg"></i>
+            </button>
+            <button onclick="nextImage()" class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 rounded-full flex items-center justify-center text-gray-700 hover:bg-white hover:text-primary-600 transition-all shadow-lg" title="Next">
+                <i class="fas fa-chevron-right text-lg"></i>
+            </button>
+            
+            <!-- Design Info Overlay -->
+            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6 text-white">
+                <div class="flex items-end justify-between">
+                    <div class="flex-1">
+                        <h3 id="galleryTitle" class="text-xl font-heading font-bold mb-2"></h3>
+                        <div class="flex items-center gap-4 text-sm">
+                            <span id="galleryCode" class="bg-white/20 px-3 py-1 rounded-full font-mono"></span>
+                            <span id="galleryPrice" class="bg-primary-600 px-3 py-1 rounded-full font-semibold"></span>
+                            <span id="galleryCategory" class="bg-white/20 px-3 py-1 rounded-full"></span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 ml-4">
+                        <span id="galleryCounter" class="text-sm bg-white/20 px-3 py-1 rounded-full"></span>
+                        <a id="galleryViewButton" href="#" class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold transition-all hover:scale-105">
+                            <i class="fas fa-external-link-alt text-sm"></i>Go to Design
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Thumbnails Strip -->
+        <div class="mt-4 max-h-24 overflow-hidden">
+            <div id="thumbnailStrip" class="flex gap-2 justify-center">
+                <!-- Thumbnails will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
 </div>
+
+<script>
+// Gallery functionality
+let currentDesigns = [];
+let currentIndex = 0;
+
+// Populate designs array from server data
+const designs = [
+    @foreach($designs as $design)
+    {
+        id: {{ $design->id }},
+        name: @json($design->name),
+        code: @json($design->design_code),
+        price: {{ $design->design_price }},
+        category: @json($design->category ? $design->category->name : ''),
+        image: @json($design->design_img ? asset('storage/' . $design->design_img) : ''),
+        url: @json(route('frontend.design.detail', $design->id))
+    }@if(!$loop->last),@endif
+    @endforeach
+];
+
+function openGallery(index) {
+    currentDesigns = designs;
+    currentIndex = index;
+    const modal = document.getElementById('galleryModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    updateGalleryContent();
+    generateThumbnails();
+    document.body.style.overflow = 'hidden';
+}
+
+function closeGallery() {
+    const modal = document.getElementById('galleryModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = 'auto';
+}
+
+function nextImage() {
+    currentIndex = (currentIndex + 1) % currentDesigns.length;
+    updateGalleryContent();
+    updateActiveThumbnail();
+}
+
+function prevImage() {
+    currentIndex = (currentIndex - 1 + currentDesigns.length) % currentDesigns.length;
+    updateGalleryContent();
+    updateActiveThumbnail();
+}
+
+function updateGalleryContent() {
+    const design = currentDesigns[currentIndex];
+    const galleryImage = document.getElementById('galleryImage');
+    const noImagePlaceholder = document.getElementById('noImagePlaceholder');
+    
+    if (design.image) {
+        galleryImage.src = design.image;
+        galleryImage.classList.remove('hidden');
+        noImagePlaceholder.classList.add('hidden');
+    } else {
+        galleryImage.classList.add('hidden');
+        noImagePlaceholder.classList.remove('hidden');
+    }
+    
+    document.getElementById('galleryTitle').textContent = design.name;
+    document.getElementById('galleryCode').textContent = design.code || 'No Code';
+    document.getElementById('galleryPrice').textContent = '₹' + new Intl.NumberFormat().format(design.price);
+    document.getElementById('galleryCategory').textContent = design.category || 'No Category';
+    document.getElementById('galleryCounter').textContent = `${currentIndex + 1} of ${currentDesigns.length}`;
+    document.getElementById('galleryViewButton').href = design.url;
+}
+
+function generateThumbnails() {
+    const thumbnailStrip = document.getElementById('thumbnailStrip');
+    thumbnailStrip.innerHTML = '';
+    
+    currentDesigns.forEach((design, index) => {
+        const thumb = document.createElement('div');
+        thumb.className = `w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${
+            index === currentIndex ? 'border-primary-500 ring-2 ring-primary-200' : 'border-transparent hover:border-gray-300'
+        }`;
+        thumb.onclick = () => {
+            currentIndex = index;
+            updateGalleryContent();
+            updateActiveThumbnail();
+        };
+        
+        if (design.image) {
+            thumb.innerHTML = `<img src="${design.image}" alt="${design.name}" class="w-full h-full object-cover">`;
+        } else {
+            thumb.innerHTML = `<div class="w-full h-full bg-gray-200 flex items-center justify-center"><i class="fas fa-image text-gray-400"></i></div>`;
+        }
+        
+        thumbnailStrip.appendChild(thumb);
+    });
+}
+
+function updateActiveThumbnail() {
+    const thumbnails = document.querySelectorAll('#thumbnailStrip > div');
+    thumbnails.forEach((thumb, index) => {
+        if (index === currentIndex) {
+            thumb.className = thumb.className.replace('border-transparent hover:border-gray-300', 'border-primary-500 ring-2 ring-primary-200');
+        } else {
+            thumb.className = thumb.className.replace('border-primary-500 ring-2 ring-primary-200', 'border-transparent hover:border-gray-300');
+        }
+    });
+}
+
+// Close modal on escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeGallery();
+    }
+    if (e.key === 'ArrowRight') {
+        nextImage();
+    }
+    if (e.key === 'ArrowLeft') {
+        prevImage();
+    }
+});
+
+// Close modal on outside click
+document.getElementById('galleryModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeGallery();
+    }
+});
+
+// View toggle functionality
+function setView(view) {
+    const container = document.getElementById('designs-container');
+    const gridBtn = document.getElementById('grid-btn');
+    const listBtn = document.getElementById('list-btn');
+    
+    if (view === 'grid') {
+        container.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6';
+        gridBtn.className = 'px-3 py-1.5 text-sm bg-primary-600 text-white hover:bg-primary-700 transition-colors';
+        listBtn.className = 'px-3 py-1.5 text-sm bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors';
+        
+        // Reset cards for grid view
+        document.querySelectorAll('.design-card').forEach(card => {
+            card.className = 'design-card card-hover bg-white rounded-2xl overflow-hidden group flex flex-col h-full';
+        });
+    } else {
+        container.className = 'space-y-4';
+        listBtn.className = 'px-3 py-1.5 text-sm bg-primary-600 text-white hover:bg-primary-700 transition-colors';
+        gridBtn.className = 'px-3 py-1.5 text-sm bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors';
+        
+        // Modify cards for list view
+        document.querySelectorAll('.design-card').forEach(card => {
+            card.className = 'design-card flex bg-white rounded-2xl overflow-hidden hover:shadow-lg transition-shadow';
+        });
+    }
+    
+    localStorage.setItem('designView', view);
+}
+
+// Restore saved view preference
+document.addEventListener('DOMContentLoaded', function() {
+    const savedView = localStorage.getItem('designView') || 'grid';
+    setView(savedView);
+});
+</script>
 @endsection

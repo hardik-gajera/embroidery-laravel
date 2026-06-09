@@ -152,10 +152,40 @@ class FrontendController extends Controller
         return view('frontend.categories', compact('category', 'children', 'designs'));
     }
 
-    public function designs($id)
+    public function designs($id, Request $request)
     {
         $category = Category::findOrFail($id);
-        $designs = Design::where('category_id', $id)->paginate(12);
+        $query = Design::with('category')->where('category_id', $id);
+        
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('design_code', 'LIKE', "%{$search}%")
+                  ->orWhere('description', 'LIKE', "%{$search}%");
+            });
+        }
+        
+        // Sorting
+        switch ($request->get('sort', 'latest')) {
+            case 'oldest':
+                $query->oldest();
+                break;
+            case 'price_low':
+                $query->orderBy('design_price', 'asc');
+                break;
+            case 'price_high':
+                $query->orderBy('design_price', 'desc');
+                break;
+            case 'name':
+                $query->orderBy('name', 'asc');
+                break;
+            default:
+                $query->latest();
+        }
+        
+        $designs = $query->paginate(20)->withQueryString();
         return view('frontend.designs', compact('category', 'designs'));
     }
 
@@ -206,13 +236,91 @@ class FrontendController extends Controller
         $customer = Customer::create($request->only('name', 'email', 'mobile_no', 'password'));
         session(['customer_id' => $customer->id, 'customer_name' => $customer->name, 'cart_count' => 0]);
 
-        return redirect()->intended('/')->with('success', 'Account created successfully!');
+        // Clear any admin-related intended URLs and redirect to home
+        session()->forget('url.intended');
+        return redirect()->route('home')->with('success', 'Account created successfully!');
     }
 
     public function logout()
     {
         session()->forget(['customer_id', 'customer_name', 'cart_count']);
         return redirect('/')->with('success', 'Logged out.');
+    }
+
+    public function showForgotPassword()
+    {
+        return view('frontend.forgot-password');
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $request->validate(['mobile_no' => 'required']);
+        
+        $customer = Customer::where('mobile_no', $request->mobile_no)->first();
+        
+        if (!$customer) {
+            return back()->withErrors(['mobile_no' => 'No account found with this mobile number.'])->withInput();
+        }
+        
+        // Generate a simple 6-digit reset code
+        $resetCode = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+        
+        // Store reset code in session with expiry
+        session([
+            'password_reset_mobile' => $request->mobile_no,
+            'password_reset_code' => $resetCode,
+            'password_reset_expires' => now()->addMinutes(10)
+        ]);
+        
+        // For demo purposes, show the code (in production, send SMS)
+        return redirect()->route('frontend.reset-password')
+            ->with('success', "Reset code sent! Use code: {$resetCode} (Valid for 10 minutes)");
+    }
+
+    public function showResetPassword()
+    {
+        if (!session('password_reset_mobile')) {
+            return redirect()->route('frontend.forgot-password')
+                ->with('error', 'Please request password reset first.');
+        }
+        
+        return view('frontend.reset-password');
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'reset_code' => 'required',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+        
+        // Check if reset session is valid
+        if (!session('password_reset_mobile') || !session('password_reset_code')) {
+            return redirect()->route('frontend.forgot-password')
+                ->with('error', 'Invalid reset session. Please try again.');
+        }
+        
+        // Check if reset code is expired
+        if (now()->gt(session('password_reset_expires'))) {
+            session()->forget(['password_reset_mobile', 'password_reset_code', 'password_reset_expires']);
+            return redirect()->route('frontend.forgot-password')
+                ->with('error', 'Reset code has expired. Please request a new one.');
+        }
+        
+        // Verify reset code
+        if ($request->reset_code !== session('password_reset_code')) {
+            return back()->withErrors(['reset_code' => 'Invalid reset code.'])->withInput();
+        }
+        
+        // Update password
+        $customer = Customer::where('mobile_no', session('password_reset_mobile'))->first();
+        $customer->update(['password' => Hash::make($request->password)]);
+        
+        // Clear reset session
+        session()->forget(['password_reset_mobile', 'password_reset_code', 'password_reset_expires']);
+        
+        return redirect()->route('frontend.login')
+            ->with('success', 'Password reset successfully! Please login with your new password.');
     }
 
     public function cart()

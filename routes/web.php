@@ -30,6 +30,10 @@ Route::get('/design/{id}', [FrontendController::class, 'designDetail'])->name('f
 Route::get('/customer/login', [FrontendController::class, 'showLogin'])->name('frontend.login');
 Route::post('/customer/login', [FrontendController::class, 'login'])->name('frontend.login.post');
 Route::post('/customer/register', [FrontendController::class, 'register'])->name('frontend.register.post');
+Route::get('/customer/forgot-password', [FrontendController::class, 'showForgotPassword'])->name('frontend.forgot-password');
+Route::post('/customer/forgot-password', [FrontendController::class, 'forgotPassword'])->name('frontend.forgot-password.post');
+Route::get('/customer/reset-password', [FrontendController::class, 'showResetPassword'])->name('frontend.reset-password');
+Route::post('/customer/reset-password', [FrontendController::class, 'resetPassword'])->name('frontend.reset-password.post');
 Route::post('/customer/logout', [FrontendController::class, 'logout'])->name('frontend.logout');
 Route::get('/cart', [FrontendController::class, 'cart'])->name('frontend.cart');
 Route::post('/cart/add', [FrontendController::class, 'addToCart'])->name('frontend.cart.add');
