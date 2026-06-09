@@ -294,27 +294,43 @@ class FrontendController extends Controller
             'password' => 'required|string|min:6|confirmed',
         ]);
         
+        // Debug session data
+        $sessionMobile = session('password_reset_mobile');
+        $sessionCode = session('password_reset_code');
+        $sessionExpires = session('password_reset_expires');
+        
         // Check if reset session is valid
-        if (!session('password_reset_mobile') || !session('password_reset_code')) {
+        if (!$sessionMobile || !$sessionCode) {
             return redirect()->route('frontend.forgot-password')
-                ->with('error', 'Invalid reset session. Please try again.');
+                ->with('error', 'Invalid reset session. Please request a new reset code.');
         }
         
         // Check if reset code is expired
-        if (now()->gt(session('password_reset_expires'))) {
+        if (now()->gt($sessionExpires)) {
             session()->forget(['password_reset_mobile', 'password_reset_code', 'password_reset_expires']);
             return redirect()->route('frontend.forgot-password')
                 ->with('error', 'Reset code has expired. Please request a new one.');
         }
         
-        // Verify reset code
-        if ($request->reset_code !== session('password_reset_code')) {
-            return back()->withErrors(['reset_code' => 'Invalid reset code.'])->withInput();
+        // Verify reset code (trim whitespace and ensure string comparison)
+        $inputCode = trim($request->reset_code);
+        $storedCode = trim($sessionCode);
+        
+        if ($inputCode !== $storedCode) {
+            return back()->withErrors([
+                'reset_code' => "Invalid reset code. Expected: {$storedCode}, Got: {$inputCode}"
+            ])->withInput();
         }
         
         // Update password
-        $customer = Customer::where('mobile_no', session('password_reset_mobile'))->first();
-        $customer->update(['password' => Hash::make($request->password)]);
+        $customer = Customer::where('mobile_no', $sessionMobile)->first();
+        
+        if (!$customer) {
+            return redirect()->route('frontend.forgot-password')
+                ->with('error', 'Customer not found. Please try again.');
+        }
+        
+        $customer->update(['password' => $request->password]);
         
         // Clear reset session
         session()->forget(['password_reset_mobile', 'password_reset_code', 'password_reset_expires']);

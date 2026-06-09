@@ -13,6 +13,7 @@
                 <p class="text-sm text-gray-400 mt-1">Enter the reset code and your new password</p>
                 @if(session('password_reset_mobile'))
                     <p class="text-xs text-primary-600 mt-2 font-medium">Code sent to: {{ session('password_reset_mobile') }}</p>
+                    <p class="text-xs text-green-600 mt-1 font-mono bg-green-50 px-2 py-1 rounded">Debug Code: {{ session('password_reset_code') }}</p>
                 @endif
             </div>
 
