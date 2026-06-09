@@ -22,6 +22,7 @@ Route::get('/clear-cache', function() {
     return 'All caches cleared!';
 });
 Route::get('/', [FrontendController::class, 'home'])->name('home');
+Route::get('/all-designs', [FrontendController::class, 'allDesigns'])->name('frontend.all-designs');
 Route::get('/category/{id}', [FrontendController::class, 'categories'])->name('frontend.categories');
 Route::get('/designs/{id}', [FrontendController::class, 'designs'])->name('frontend.designs');
 Route::get('/design/download/{id}', [FrontendController::class, 'downloadDesign'])->name('frontend.design.download');
@@ -61,6 +62,7 @@ Route::middleware('auth')->prefix('admin')->group(function () {
     Route::resource('customers', CustomerController::class);
     Route::resource('categories', CategoryController::class)->except('show');
     Route::resource('designs', DesignController::class);
+    Route::get('/designs/{design}/download', [DesignController::class, 'download'])->name('designs.download');
     Route::resource('packages', DesignPackageController::class);
     Route::get('/package-history', [DashboardController::class, 'packageHistory'])->name('package-history');
     Route::resource('contact-messages', ContactMessageController::class)->only(['index', 'show', 'destroy']);

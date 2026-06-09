@@ -22,8 +22,27 @@
                 <i class="fas fa-sparkles text-yellow-300"></i>
                 <span>Premium Collection Available</span>
             </div>
+            <!-- Logo Section -->
+            @if($appSettings['logo'])
+                <div class="mb-8 animate-scale-in">
+                    <div class="relative">
+                        <div class="absolute inset-0 bg-white/20 rounded-3xl blur-xl"></div>
+                        <img src="{{ asset('storage/' . $appSettings['logo']) }}" alt="{{ $appSettings['company_name'] }}" class="relative w-32 h-32 mx-auto object-contain bg-white/90 backdrop-blur-sm p-4 rounded-3xl shadow-2xl shadow-black/30 hover:scale-105 transition-transform duration-500">
+                    </div>
+                </div>
+            @else
+                <div class="mb-8 animate-scale-in">
+                    <div class="relative">
+                        <div class="absolute inset-0 bg-white/20 rounded-3xl blur-xl"></div>
+                        <div class="relative w-32 h-32 mx-auto bg-gradient-to-br from-primary-500 to-accent-500 rounded-3xl flex items-center justify-center text-white text-3xl font-bold shadow-2xl shadow-black/30 hover:scale-105 transition-transform duration-500">
+                            <i class="fas fa-palette"></i>
+                        </div>
+                    </div>
+                </div>
+            @endif
+            
             <h1 class="text-4xl md:text-6xl font-heading font-bold text-white mb-5 leading-tight">
-                Premium Embroidery<br><span class="bg-gradient-to-r from-primary-200 to-accent-300 bg-clip-text text-transparent">Designs</span>
+                {{ explode(' ', $appSettings['company_name'])[0] ?? 'Aaradhya' }}<br><span class="bg-gradient-to-r from-primary-200 to-accent-300 bg-clip-text text-transparent">{{ implode(' ', array_slice(explode(' ', $appSettings['company_name']), 1)) ?: 'Design Gallery' }}</span>
             </h1>
             <p class="text-lg text-primary-200/80 max-w-2xl mx-auto mb-10">Discover thousands of beautiful embroidery patterns crafted by professionals. Download instantly and start creating masterpieces.</p>
             <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -67,6 +86,42 @@
             <h3 class="font-heading font-semibold text-gray-800 text-lg mb-2">Secure Payment</h3>
             <p class="text-sm text-gray-500 leading-relaxed">Safe & secure payments via Razorpay. Your data is always protected.</p>
         </div>
+    </div>
+</section>
+
+<!-- Latest Designs -->
+<section id="latest-designs" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 scroll-reveal">
+    <div class="text-center mb-12">
+        <span class="inline-block px-3 py-1 bg-green-50 text-green-600 text-xs font-semibold rounded-full uppercase tracking-wider mb-3">New Arrivals</span>
+        <h2 class="text-3xl font-heading font-bold text-gray-800">Latest Designs</h2>
+        <p class="text-gray-500 text-sm mt-2">Freshly added embroidery patterns for your next project</p>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+        @foreach($featuredDesigns as $design)
+        <a href="{{ route('frontend.design.detail', $design->id) }}" class="card-hover bg-white rounded-2xl overflow-hidden group">
+            @if($design->design_img)
+                <div class="aspect-[4/3] overflow-hidden">
+                    <img src="{{ asset('storage/' . $design->design_img) }}" alt="{{ $design->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                </div>
+            @else
+                <div class="aspect-[4/3] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                    <i class="fas fa-swatchbook text-gray-600 text-3xl group-hover:scale-110 transition-transform"></i>
+                </div>
+            @endif
+            <div class="p-4">
+                <h3 class="font-semibold text-gray-800 text-sm truncate group-hover:text-primary-600 transition-colors">{{ $design->name }}</h3>
+                <p class="text-xs text-gray-400 mt-1">₹{{ number_format($design->design_price) }}</p>
+                @if($design->design_code)
+                    <p class="text-[10px] text-primary-500 font-medium">{{ $design->design_code }}</p>
+                @endif
+            </div>
+        </a>
+        @endforeach
+    </div>
+    <div class="text-center mt-10">
+        <a href="{{ route('frontend.all-designs') }}" class="inline-flex items-center gap-2 px-8 py-3.5 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-all shadow-lg shadow-primary-200 hover:shadow-primary-300 hover:scale-105">
+            <i class="fas fa-th-large"></i> View All Designs
+        </a>
     </div>
 </section>
 
@@ -116,42 +171,6 @@
             <p class="text-gray-400 font-medium">No categories available yet.</p>
         </div>
     @endif
-</section>
-
-<!-- Featured Designs -->
-<section id="designs" class="bg-white py-16 scroll-reveal">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
-            <span class="inline-block px-3 py-1 bg-green-50 text-green-600 text-xs font-semibold rounded-full uppercase tracking-wider mb-3">New Arrivals</span>
-            <h2 class="text-3xl font-heading font-bold text-gray-800">Latest Designs</h2>
-            <p class="text-gray-500 text-sm mt-2">Freshly added embroidery patterns for your next project</p>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-            @foreach($featuredDesigns as $design)
-            <a href="{{ route('frontend.design.detail', $design->id) }}" class="card-hover bg-white rounded-2xl overflow-hidden group">
-                @if($design->design_img)
-                    <div class="aspect-[4/3] overflow-hidden">
-                        <img src="{{ asset('storage/' . $design->design_img) }}" alt="{{ $design->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                    </div>
-                @else
-                    <div class="aspect-[4/3] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-                        <i class="fas fa-swatchbook text-gray-600 text-3xl group-hover:scale-110 transition-transform"></i>
-                    </div>
-                @endif
-                <div class="p-4 flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
-                        <i class="fas fa-swatchbook text-green-500 text-sm"></i>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <h3 class="font-semibold text-gray-800 text-sm truncate group-hover:text-primary-600 transition-colors">{{ $design->name }}</h3>
-                        <p class="text-xs text-gray-400 mt-0.5">₹{{ number_format($design->design_price) }} · {{ $design->stitches ? number_format($design->stitches) . ' stitches' : $design->design_format }}</p>
-                    </div>
-                    <i class="fas fa-chevron-right text-gray-300 text-xs group-hover:text-primary-500 group-hover:translate-x-1 transition-all"></i>
-                </div>
-            </a>
-            @endforeach
-        </div>
-    </div>
 </section>
 
 <!-- Packages Section -->

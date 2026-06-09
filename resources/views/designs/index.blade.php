@@ -87,6 +87,9 @@
                             <a href="{{ route('designs.show', $design) }}" class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-400 hover:text-blue-600 transition" title="View">
                                 <i class="fas fa-eye text-xs"></i>
                             </a>
+                            <a href="{{ route('designs.download', $design) }}" class="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-purple-400 hover:text-purple-600 transition" title="Download">
+                                <i class="fas fa-download text-xs"></i>
+                            </a>
                             <a href="{{ route('designs.edit', $design) }}" class="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-400 hover:text-green-600 transition" title="Edit">
                                 <i class="fas fa-pen text-xs"></i>
                             </a>

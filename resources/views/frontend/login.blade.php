@@ -24,14 +24,14 @@
                 <form method="POST" action="{{ route('frontend.login.post') }}" class="space-y-5">
                     @csrf
                     <div>
-                        <label class="text-sm font-medium text-gray-700 mb-1.5 block">Email</label>
+                        <label class="text-sm font-medium text-gray-700 mb-1.5 block">Mobile Number</label>
                         <div class="relative">
-                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><i class="fas fa-envelope text-sm"></i></span>
-                            <input type="email" name="email" value="{{ old('email') }}" required
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><i class="fas fa-phone text-sm"></i></span>
+                            <input type="text" name="mobile_no" value="{{ old('mobile_no') }}" required
                                 class="w-full border border-gray-200 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-primary-400 focus:ring-4 focus:ring-primary-50 transition-all"
-                                placeholder="your@email.com">
+                                placeholder="9876543210">
                         </div>
-                        @error('email')<p class="text-red-500 text-xs mt-1.5"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>@enderror
+                        @error('mobile_no')<p class="text-red-500 text-xs mt-1.5"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="text-sm font-medium text-gray-700 mb-1.5 block">Password</label>
@@ -145,8 +145,10 @@ function showTab(tab) {
         loginTab.classList.add('text-gray-500');
     }
 }
-@if($errors->has('name') || $errors->has('mobile_no'))
+@if($errors->has('name') || $errors->has('email') || $errors->has('password_confirmation'))
     showTab('register');
+@elseif($errors->has('mobile_no') || $errors->has('password'))
+    showTab('login');
 @endif
 </script>
 @endpush

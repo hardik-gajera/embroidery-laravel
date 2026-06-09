@@ -19,9 +19,52 @@ class FrontendController extends Controller
     public function home()
     {
         $parentCategories = Category::parents()->withCount('children')->get();
-        $featuredDesigns = Design::latest()->take(8)->get();
+        $featuredDesigns = Design::latest()->take(12)->get();
         $packages = DesignPackage::where('state', 'confirm')->latest()->take(4)->get();
         return view('frontend.home', compact('parentCategories', 'featuredDesigns', 'packages'));
+    }
+
+    public function allDesigns(Request $request)
+    {
+        $query = Design::with('category');
+        
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('design_code', 'LIKE', "%{$search}%")
+                  ->orWhere('description', 'LIKE', "%{$search}%");
+            });
+        }
+        
+        // Category filter
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+        
+        // Sorting
+        switch ($request->get('sort', 'latest')) {
+            case 'oldest':
+                $query->oldest();
+                break;
+            case 'price_low':
+                $query->orderBy('design_price', 'asc');
+                break;
+            case 'price_high':
+                $query->orderBy('design_price', 'desc');
+                break;
+            case 'name':
+                $query->orderBy('name', 'asc');
+                break;
+            default:
+                $query->latest();
+        }
+        
+        $designs = $query->paginate(20);
+        $categories = Category::orderBy('name')->get();
+        
+        return view('frontend.all-designs', compact('designs', 'categories'));
     }
 
     public function packages()
@@ -130,18 +173,25 @@ class FrontendController extends Controller
 
     public function login(Request $request)
     {
-        $request->validate(['email' => 'required|email', 'password' => 'required']);
-        $customer = Customer::where('email', $request->email)->first();
+        $request->validate(['mobile_no' => 'required', 'password' => 'required']);
+        $customer = Customer::where('mobile_no', $request->mobile_no)->first();
 
         if ($customer && Hash::check($request->password, $customer->password)) {
             session(['customer_id' => $customer->id, 'customer_name' => $customer->name]);
             session(['cart_count' => Cart::where('customer_id', $customer->id)->count()]);
 
-            $intended = session()->pull('url.intended', route('home'));
-            return redirect($intended)->with('success', 'Welcome back!');
+            // Clear any intended URL that might redirect to admin
+            $intended = session()->pull('url.intended');
+            
+            // Only use intended URL if it's not an admin route
+            if ($intended && !str_contains($intended, '/admin')) {
+                return redirect($intended)->with('success', 'Welcome back!');
+            }
+            
+            return redirect()->route('home')->with('success', 'Welcome back!');
         }
 
-        return back()->withErrors(['email' => 'Invalid credentials.']);
+        return back()->withErrors(['mobile_no' => 'Invalid mobile number or password.'])->withInput();
     }
 
     public function register(Request $request)
@@ -175,7 +225,11 @@ class FrontendController extends Controller
     public function addToCart(Request $request)
     {
         if (!session('customer_id')) {
-            session(['url.intended' => url()->previous()]);
+            // Store current URL only if it's not an admin route
+            $currentUrl = url()->previous();
+            if (!str_contains($currentUrl, '/admin')) {
+                session(['url.intended' => $currentUrl]);
+            }
             return redirect()->route('frontend.login')->with('error', 'Please login first.');
         }
 
@@ -199,7 +253,11 @@ class FrontendController extends Controller
     public function buyNow(Request $request)
     {
         if (!session('customer_id')) {
-            session(['url.intended' => url()->previous()]);
+            // Store current URL only if it's not an admin route
+            $currentUrl = url()->previous();
+            if (!str_contains($currentUrl, '/admin')) {
+                session(['url.intended' => $currentUrl]);
+            }
             return redirect()->route('frontend.login');
         }
 
@@ -349,12 +407,20 @@ class FrontendController extends Controller
             $customer->increment('downloaded_design');
         }
 
-        $extension = pathinfo($design->file_name, PATHINFO_EXTENSION) ?: $design->design_format;
-        $fileName = ($design->design_code ?? $design->name) . '.' . $extension;
+        // Use design code as filename if available, otherwise use original name
+        $fileName = $design->design_code ?: ($design->name ?: 'design');
+        $extension = $design->design_format ?: pathinfo($design->file_name, PATHINFO_EXTENSION);
+        
+        // Ensure we have an extension
+        if (!$extension) {
+            $extension = 'emb'; // Default extension
+        }
+        
+        $downloadName = $fileName . '.' . $extension;
 
         return response()->file($filePath, [
             'Content-Type' => 'application/octet-stream',
-            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+            'Content-Disposition' => 'attachment; filename="' . $downloadName . '"',
         ]);
     }
 }

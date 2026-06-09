@@ -83,7 +83,7 @@
             <a href="{{ route('designs.edit', $design) }}" class="px-4 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition text-sm font-medium">
                 <i class="fas fa-pen mr-1.5 text-xs"></i>Edit
             </a>
-            <a href="{{ asset('storage/' . $design->emb_file) }}" download class="px-4 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm font-medium">
+            <a href="{{ route('designs.download', $design) }}" class="px-4 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm font-medium">
                 <i class="fas fa-download mr-1.5 text-xs"></i>Download File
             </a>
         </div>

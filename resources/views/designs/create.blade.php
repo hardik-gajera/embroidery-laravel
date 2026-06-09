@@ -3,6 +3,17 @@
 @section('subtitle', 'Upload a new embroidery design')
 
 @section('content')
+<!-- Alert about auto-generation -->
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+    <div class="flex items-start gap-3">
+        <i class="fas fa-info-circle text-blue-500 text-sm mt-0.5"></i>
+        <div>
+            <h4 class="text-sm font-medium text-blue-800">Automatic Code Generation</h4>
+            <p class="text-sm text-blue-600 mt-1">A unique design code will be automatically generated when you save this design. You don't need to enter it manually.</p>
+        </div>
+    </div>
+</div>
+
 <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
     <div class="px-6 py-4 bg-primary-600 text-white flex items-center gap-3">
         <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">

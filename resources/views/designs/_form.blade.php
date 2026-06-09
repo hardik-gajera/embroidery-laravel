@@ -7,13 +7,23 @@
         @error('name')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
     </div>
 
+    @if(isset($design) && $design->design_code)
     <div>
         <label class="text-sm font-medium text-gray-700 mb-1.5 block">Design Code</label>
-        <input type="text" name="design_code" value="{{ old('design_code', $design->design_code ?? '') }}"
-            class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-50 transition @error('design_code') border-red-300 @enderror"
-            placeholder="e.g. EMB-001">
-        @error('design_code')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+        <input type="text" value="{{ $design->design_code }}" readonly
+            class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm bg-gray-50 text-gray-600 cursor-not-allowed"
+            placeholder="Auto-generated on save">
+        <p class="text-xs text-gray-400 mt-1">Code is automatically generated and cannot be changed</p>
     </div>
+    @else
+    <div>
+        <label class="text-sm font-medium text-gray-700 mb-1.5 block">Design Code</label>
+        <input type="text" readonly
+            class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm bg-gray-50 text-gray-600 cursor-not-allowed"
+            placeholder="Will be auto-generated on save">
+        <p class="text-xs text-gray-400 mt-1">Unique code will be automatically generated</p>
+    </div>
+    @endif
 
     <div>
         <label class="text-sm font-medium text-gray-700 mb-1.5 block">Category</label>

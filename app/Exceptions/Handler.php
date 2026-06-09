@@ -37,9 +37,31 @@ class Handler extends ExceptionHandler
     }
 
     /**
+     * Convert an authentication exception into a response.
+     */
+    protected function unauthenticated($request, AuthenticationException $exception)
+    {
+        if ($request->expectsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated',
+                'error' => 'Please login to access this resource'
+            ], 401);
+        }
+
+        // Handle admin routes
+        if ($request->is('admin') || $request->is('admin/*')) {
+            return redirect()->guest(route('login'));
+        }
+
+        // Handle frontend routes  
+        return redirect()->guest(route('frontend.login'));
+    }
+
+    /**
      * Render an exception into an HTTP response.
      */
-    public function render($request, Throwable $e): Response|JsonResponse
+    public function render($request, Throwable $e)
     {
         // Handle mobile API routes with JSON responses
         if ($request->is('api/mobile/*')) {

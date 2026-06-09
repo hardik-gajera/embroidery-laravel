@@ -99,4 +99,26 @@ class DesignController extends Controller
         $design->delete();
         return redirect()->route('designs.index')->with('success', 'Design deleted successfully.');
     }
+
+    public function download(Design $design)
+    {
+        $filePath = storage_path('app/public/' . $design->emb_file);
+        
+        if (!file_exists($filePath)) {
+            return back()->with('error', 'Design file not found.');
+        }
+        
+        // Use design code as filename if available, otherwise use original name
+        $fileName = $design->design_code ?: ($design->name ?: 'design');
+        $extension = $design->design_format ?: pathinfo($design->file_name, PATHINFO_EXTENSION);
+        
+        // Ensure we have an extension
+        if (!$extension) {
+            $extension = 'emb'; // Default extension
+        }
+        
+        $downloadName = $fileName . '.' . $extension;
+        
+        return response()->download($filePath, $downloadName);
+    }
 }

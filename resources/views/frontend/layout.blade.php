@@ -81,8 +81,8 @@
 
                 <div class="hidden md:flex items-center gap-1">
                     <a href="{{ route('home') }}" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">Home</a>
+                    <a href="{{ route('frontend.all-designs') }}" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">All Designs</a>
                     <a href="{{ route('home') }}#categories" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">Categories</a>
-                    <a href="{{ route('home') }}#designs" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">Designs</a>
                     <a href="{{ route('frontend.packages') }}" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">Packages</a>
                     <a href="{{ route('frontend.about') }}" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">About Us</a>
                     <a href="{{ route('frontend.contact') }}" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">Contact</a>
@@ -142,8 +142,8 @@
             <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-gray-100 mt-2 pt-3">
                 <div class="flex flex-col gap-1">
                     <a href="{{ route('home') }}" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">Home</a>
+                    <a href="{{ route('frontend.all-designs') }}" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">All Designs</a>
                     <a href="{{ route('home') }}#categories" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">Categories</a>
-                    <a href="{{ route('home') }}#designs" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">Designs</a>
                     <a href="{{ route('frontend.packages') }}" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">Packages</a>
                     <a href="{{ route('frontend.about') }}" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">About Us</a>
                     <a href="{{ route('frontend.contact') }}" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all">Contact</a>
@@ -183,6 +183,7 @@
                     <h4 class="text-white font-semibold mb-4 text-sm uppercase tracking-wider">Quick Links</h4>
                     <div class="space-y-2.5 text-sm">
                         <a href="{{ route('home') }}" class="block hover:text-white hover:translate-x-1 transition-all">Home</a>
+                        <a href="{{ route('frontend.all-designs') }}" class="block hover:text-white hover:translate-x-1 transition-all">All Designs</a>
                         <a href="{{ route('home') }}#categories" class="block hover:text-white hover:translate-x-1 transition-all">Categories</a>
                         <a href="{{ route('frontend.packages') }}" class="block hover:text-white hover:translate-x-1 transition-all">Packages</a>
                         <a href="{{ route('frontend.about') }}" class="block hover:text-white hover:translate-x-1 transition-all">About Us</a>
