@@ -83,6 +83,7 @@ class CustomerController extends Controller
         // Merge both into a unified collection
         $merged = $orders->map(function ($order) {
             return (object) [
+                'id' => $order->id,
                 'package' => $order->package,
                 'total' => $order->package->number_of_design ?? 0,
                 'downloaded' => 0,
@@ -93,6 +94,7 @@ class CustomerController extends Controller
             ];
         })->concat($purchases->map(function ($p) {
             return (object) [
+                'id' => $p->id,
                 'package' => $p->package,
                 'total' => $p->total,
                 'downloaded' => $p->downloaded,

@@ -54,6 +54,7 @@
                                 <th class="px-4 py-2.5 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Downloaded</th>
                                 <th class="px-4 py-2.5 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Period</th>
                                 <th class="px-4 py-2.5 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                                <th class="px-4 py-2.5 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
@@ -86,6 +87,17 @@
                                         <span class="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full text-gray-500 bg-gray-100">
                                             <i class="fas fa-circle text-[6px] mr-1.5"></i>Expired
                                         </span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3">
+                                    @if($order->source === 'odoo')
+                                        <a href="{{ route('package-purchase.edit', $order->id) }}" class="inline-flex items-center text-xs font-medium text-blue-600 hover:text-blue-800 transition">
+                                            <i class="fas fa-pen text-[10px] mr-1"></i>Edit
+                                        </a>
+                                    @else
+                                        <a href="{{ route('order-package.edit', $order->id) }}" class="inline-flex items-center text-xs font-medium text-blue-600 hover:text-blue-800 transition">
+                                            <i class="fas fa-pen text-[10px] mr-1"></i>Edit
+                                        </a>
                                     @endif
                                 </td>
                             </tr>

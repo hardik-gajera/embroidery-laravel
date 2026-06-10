@@ -69,6 +69,10 @@ Route::middleware('auth')->prefix('admin')->group(function () {
     Route::get('/designs/{design}/download', [DesignController::class, 'download'])->name('designs.download');
     Route::resource('packages', DesignPackageController::class);
     Route::get('/package-history', [DashboardController::class, 'packageHistory'])->name('package-history');
+    Route::get('/package-purchase/{id}/edit', [DashboardController::class, 'editPackagePurchase'])->name('package-purchase.edit');
+    Route::put('/package-purchase/{id}', [DashboardController::class, 'updatePackagePurchase'])->name('package-purchase.update');
+    Route::get('/order-package/{id}/edit', [DashboardController::class, 'editOrderPackage'])->name('order-package.edit');
+    Route::put('/order-package/{id}', [DashboardController::class, 'updateOrderPackage'])->name('order-package.update');
     Route::resource('contact-messages', ContactMessageController::class)->only(['index', 'show', 'destroy']);
     Route::get('/settings', [SettingController::class, 'edit'])->name('settings.edit');
     Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');

@@ -15,7 +15,7 @@ class UpdateCustomerRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:customers,email,' . $this->route('customer'),
+            'email' => 'required|email|unique:customers,email,' . $this->route('customer')->id,
             'mobile_no' => 'required|string|max:15',
             'downloaded_design' => 'required|integer|min:0',
             'total_design' => 'required|integer|min:0',

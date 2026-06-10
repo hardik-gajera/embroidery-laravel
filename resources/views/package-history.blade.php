@@ -39,6 +39,7 @@
                     <th class="px-5 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Payment ID</th>
                     <th class="px-5 py-3 text-center text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Status</th>
                     <th class="px-5 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Date</th>
+                    <th class="px-5 py-3 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Action</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
@@ -71,10 +72,15 @@
                         </span>
                     </td>
                     <td class="px-5 py-3.5 text-sm text-gray-500">{{ $order->created_at->format('M d, Y') }}</td>
+                    <td class="px-5 py-3.5">
+                        <a href="{{ route('order-package.edit', $order->id) }}" class="inline-flex items-center text-xs font-medium text-blue-600 hover:text-blue-800 transition">
+                            <i class="fas fa-pen text-[10px] mr-1"></i>Edit
+                        </a>
+                    </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="px-5 py-12 text-center text-gray-400 text-sm">
+                    <td colspan="8" class="px-5 py-12 text-center text-gray-400 text-sm">
                         <i class="fas fa-receipt text-2xl mb-2 block"></i>
                         <p class="font-medium">No package purchases found</p>
                         <p class="text-xs mt-1">{{ request('search') ? 'Try a different search term' : 'Package purchases will appear here' }}</p>
