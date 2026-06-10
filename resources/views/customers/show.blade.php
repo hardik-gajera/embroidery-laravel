@@ -88,12 +88,49 @@
                         </div>
                     </div>
                 </div>
-            @else
-                <div class="text-center py-6 text-gray-400">
-                    <i class="fas fa-box-open text-2xl mb-2 block"></i>
-                    <p class="text-sm font-medium">No active package</p>
-                    <p class="text-xs mt-1">This customer hasn't purchased any package yet.</p>
+                <div class="mt-4 flex items-center gap-3">
+                    <form method="POST" action="{{ route('customers.remove-package', $customer) }}" onsubmit="return confirm('Are you sure you want to remove this package?')">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="px-3.5 py-2 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition">
+                            <i class="fas fa-times mr-1"></i>Remove Package
+                        </button>
+                    </form>
                 </div>
+            @else
+                <!-- Assign Package Form -->
+                <form method="POST" action="{{ route('customers.assign-package', $customer) }}">
+                    @csrf
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Select Package</label>
+                            <select name="package_id" required
+                                class="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-50 @error('package_id') border-red-400 @enderror">
+                                <option value="">Choose a package...</option>
+                                @foreach($packages as $pkg)
+                                    <option value="{{ $pkg->id }}">{{ $pkg->name }} ({{ $pkg->number_of_design }} designs / {{ $pkg->time_period }} months - ₹{{ number_format($pkg->price, 2) }})</option>
+                                @endforeach
+                            </select>
+                            @error('package_id') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Start Date</label>
+                            <input type="date" name="start_date" value="{{ date('Y-m-d') }}" required
+                                class="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-50 @error('start_date') border-red-400 @enderror">
+                            @error('start_date') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Downloaded Designs</label>
+                            <input type="number" name="downloaded_design" value="0" min="0" required
+                                class="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-50 @error('downloaded_design') border-red-400 @enderror">
+                            @error('downloaded_design') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                        </div>
+                        <div class="flex items-end">
+                            <button type="submit" class="px-5 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition text-sm font-medium">
+                                <i class="fas fa-plus mr-1.5"></i>Assign Package
+                            </button>
+                        </div>
+                    </div>
+                </form>
             @endif
         </div>
     </div>

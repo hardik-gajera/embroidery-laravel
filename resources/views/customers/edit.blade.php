@@ -31,6 +31,89 @@
         </div>
     </div>
 
+    <!-- Active Package -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+            <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-box text-purple-500 text-sm"></i>
+            </div>
+            <h3 class="text-sm font-heading font-semibold text-gray-800">Active Package</h3>
+        </div>
+        <div class="p-6">
+            @if($customer->package && $customer->package_end_date && $customer->package_end_date->isFuture())
+                <div class="flex items-start gap-4 p-4 bg-green-50 border border-green-100 rounded-xl">
+                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-check-circle text-green-600 text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-sm font-semibold text-gray-800">{{ $customer->package->name }}</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+                            <div>
+                                <p class="text-[10px] text-gray-400 uppercase font-semibold">Designs</p>
+                                <p class="text-sm font-bold text-gray-800">{{ $customer->package->number_of_design }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-gray-400 uppercase font-semibold">Start Date</p>
+                                <p class="text-sm font-bold text-gray-800">{{ $customer->package_start_date->format('M d, Y') }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-gray-400 uppercase font-semibold">End Date</p>
+                                <p class="text-sm font-bold text-gray-800">{{ $customer->package_end_date->format('M d, Y') }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-gray-400 uppercase font-semibold">Days Left</p>
+                                <p class="text-sm font-bold text-green-600">{{ now()->diffInDays($customer->package_end_date) }} days</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center gap-3">
+                    <form method="POST" action="{{ route('customers.remove-package', $customer) }}" onsubmit="return confirm('Are you sure you want to remove this package?')">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="px-3.5 py-2 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition">
+                            <i class="fas fa-times mr-1"></i>Remove Package
+                        </button>
+                    </form>
+                </div>
+            @else
+                <!-- Assign Package Form -->
+                <form method="POST" action="{{ route('customers.assign-package', $customer) }}">
+                    @csrf
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Select Package</label>
+                            <select name="package_id" required
+                                class="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-50 @error('package_id') border-red-400 @enderror">
+                                <option value="">Choose a package...</option>
+                                @foreach($packages as $pkg)
+                                    <option value="{{ $pkg->id }}">{{ $pkg->name }} ({{ $pkg->number_of_design }} designs / {{ $pkg->time_period }} months - ₹{{ number_format($pkg->price, 2) }})</option>
+                                @endforeach
+                            </select>
+                            @error('package_id') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Start Date</label>
+                            <input type="date" name="start_date" value="{{ date('Y-m-d') }}" required
+                                class="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-50 @error('start_date') border-red-400 @enderror">
+                            @error('start_date') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-600 mb-1.5">Downloaded Designs</label>
+                            <input type="number" name="downloaded_design" value="0" min="0" required
+                                class="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-50 @error('downloaded_design') border-red-400 @enderror">
+                            @error('downloaded_design') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                        </div>
+                        <div class="flex items-end">
+                            <button type="submit" class="px-5 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition text-sm font-medium">
+                                <i class="fas fa-plus mr-1.5"></i>Assign Package
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            @endif
+        </div>
+    </div>
+
     <!-- Package Purchase History -->
     <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">

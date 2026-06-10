@@ -39,7 +39,9 @@ Route::get('/cart', [FrontendController::class, 'cart'])->name('frontend.cart');
 Route::post('/cart/add', [FrontendController::class, 'addToCart'])->name('frontend.cart.add');
 Route::delete('/cart/{id}', [FrontendController::class, 'removeFromCart'])->name('frontend.cart.remove');
 Route::post('/buy-now', [FrontendController::class, 'buyNow'])->name('frontend.buy');
+Route::post('/cart/checkout', [FrontendController::class, 'cartCheckout'])->name('frontend.cart.checkout');
 Route::post('/claim-design', [FrontendController::class, 'claimDesign'])->name('frontend.claim');
+Route::post('/claim-designs-bulk', [FrontendController::class, 'claimDesignsBulk'])->name('frontend.claim.bulk');
 Route::post('/payment/success', [FrontendController::class, 'paymentSuccess'])->name('frontend.payment.success');
 Route::get('/my-designs', [FrontendController::class, 'myDesigns'])->name('frontend.my-designs');
 Route::get('/my-packages', [FrontendController::class, 'myPackages'])->name('frontend.my-packages');
@@ -64,6 +66,8 @@ Route::middleware('auth')->prefix('admin')->group(function () {
     Route::get('/', fn() => redirect('/admin/dashboard'));
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('customers', CustomerController::class);
+    Route::post('customers/{customer}/assign-package', [CustomerController::class, 'assignPackage'])->name('customers.assign-package');
+    Route::delete('customers/{customer}/remove-package', [CustomerController::class, 'removePackage'])->name('customers.remove-package');
     Route::resource('categories', CategoryController::class)->except('show');
     Route::resource('designs', DesignController::class);
     Route::get('/designs/{design}/download', [DesignController::class, 'download'])->name('designs.download');

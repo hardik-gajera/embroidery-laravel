@@ -42,9 +42,11 @@
                 <p class="text-sm text-gray-500">Total ({{ $cartItems->count() }} items)</p>
                 <p class="text-2xl font-bold bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">₹{{ number_format($total, 2) }}</p>
             </div>
-            <form action="{{ route('frontend.buy') }}" method="POST">
+            <form action="{{ route('frontend.cart.checkout') }}" method="POST">
                 @csrf
-                <input type="hidden" name="design_id" value="{{ $cartItems->first()->design_id }}">
+                @foreach($cartItems as $item)
+                    <input type="hidden" name="design_ids[]" value="{{ $item->design_id }}">
+                @endforeach
                 <button class="btn-glow px-8 py-3.5 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl font-semibold hover:from-primary-700 hover:to-primary-800 transition-all shadow-lg shadow-primary-200 hover:scale-105">
                     <i class="fas fa-bolt mr-2"></i>Checkout
                 </button>

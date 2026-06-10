@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\CustomerPackagePurchase;
 use App\Http\Requests\StoreCustomerRequest;
 use App\Http\Requests\UpdateCustomerRequest;
+use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
@@ -40,13 +41,15 @@ class CustomerController extends Controller
     {
         $customer->load('package');
         $packageOrders = $this->getPackageHistory($customer);
-        return view('customers.show', compact('customer', 'packageOrders'));
+        $packages = \App\Models\DesignPackage::where('state', 'confirm')->get();
+        return view('customers.show', compact('customer', 'packageOrders', 'packages'));
     }
 
     public function edit(Customer $customer)
     {
         $packageOrders = $this->getPackageHistory($customer);
-        return view('customers.edit', compact('customer', 'packageOrders'));
+        $packages = \App\Models\DesignPackage::where('state', 'confirm')->get();
+        return view('customers.edit', compact('customer', 'packageOrders', 'packages'));
     }
 
     public function update(UpdateCustomerRequest $request, Customer $customer)
@@ -63,6 +66,42 @@ class CustomerController extends Controller
     {
         $customer->delete();
         return redirect()->route('customers.index')->with('success', 'Customer deleted successfully.');
+    }
+
+    public function assignPackage(Request $request, Customer $customer)
+    {
+        $request->validate([
+            'package_id' => 'required|exists:design_packages,id',
+            'start_date' => 'required|date',
+            'downloaded_design' => 'required|integer|min:0',
+        ]);
+
+        $package = \App\Models\DesignPackage::findOrFail($request->package_id);
+        $startDate = \Carbon\Carbon::parse($request->start_date);
+        $endDate = $startDate->copy()->addMonths($package->time_period);
+
+        $customer->update([
+            'package_id' => $package->id,
+            'package_start_date' => $startDate,
+            'package_end_date' => $endDate,
+            'total_design' => $package->number_of_design,
+            'downloaded_design' => $request->downloaded_design,
+        ]);
+
+        return redirect()->route('customers.show', $customer)->with('success', 'Package assigned successfully.');
+    }
+
+    public function removePackage(Customer $customer)
+    {
+        $customer->update([
+            'package_id' => null,
+            'package_start_date' => null,
+            'package_end_date' => null,
+            'total_design' => 0,
+            'downloaded_design' => 0,
+        ]);
+
+        return redirect()->route('customers.show', $customer)->with('success', 'Package removed successfully.');
     }
 
     private function getPackageHistory(Customer $customer)

@@ -377,7 +377,6 @@ class FrontendController extends Controller
     public function buyNow(Request $request)
     {
         if (!session('customer_id')) {
-            // Store current URL only if it's not an admin route
             $currentUrl = url()->previous();
             if (!str_contains($currentUrl, '/admin')) {
                 session(['url.intended' => $currentUrl]);
@@ -401,10 +400,8 @@ class FrontendController extends Controller
         // Check active package
         if ($customer->hasActivePackage()) {
             if ($customer->downloaded_design < $customer->total_design) {
-                // Free download via package
                 return view('frontend.package-download', compact('design', 'customer'));
             } else {
-                // Package limit exceeded
                 $razorpayKey = config('services.razorpay.key');
                 $amount = $design->design_price * 100;
                 $packageExceeded = true;
@@ -412,12 +409,60 @@ class FrontendController extends Controller
             }
         }
 
-        // No package — go to payment
         $razorpayKey = config('services.razorpay.key');
         $amount = $design->design_price * 100;
         $packageExceeded = false;
 
         return view('frontend.payment', compact('design', 'customer', 'razorpayKey', 'amount', 'packageExceeded'));
+    }
+
+    public function cartCheckout(Request $request)
+    {
+        if (!session('customer_id')) {
+            return redirect()->route('frontend.login');
+        }
+
+        $designIds = $request->design_ids;
+        $customer = Customer::find(session('customer_id'));
+        $designs = Design::whereIn('id', $designIds)->get();
+
+        // Filter out already purchased designs
+        $purchasedIds = Order::where('customer_id', $customer->id)
+            ->whereIn('design_id', $designIds)
+            ->where('status', 'paid')
+            ->pluck('design_id')->toArray();
+
+        $designs = $designs->filter(fn($d) => !in_array($d->id, $purchasedIds));
+
+        if ($designs->isEmpty()) {
+            return redirect()->route('frontend.my-designs')->with('success', 'You already own all these designs.');
+        }
+
+        // Check active package
+        if ($customer->hasActivePackage()) {
+            $remaining = $customer->total_design - $customer->downloaded_design;
+            if ($remaining >= $designs->count()) {
+                // All can be claimed via package
+                return view('frontend.package-download-bulk', compact('designs', 'customer'));
+            } elseif ($remaining > 0) {
+                // Some free, some paid
+                $freeDesigns = $designs->take($remaining);
+                $paidDesigns = $designs->slice($remaining)->values();
+                $totalAmount = $paidDesigns->sum('design_price');
+                $amount = $totalAmount * 100;
+                $razorpayKey = config('services.razorpay.key');
+                return view('frontend.cart-payment', compact('freeDesigns', 'paidDesigns', 'customer', 'razorpayKey', 'amount', 'totalAmount'));
+            }
+        }
+
+        // No package — all need payment
+        $totalAmount = $designs->sum('design_price');
+        $amount = $totalAmount * 100;
+        $razorpayKey = config('services.razorpay.key');
+        $paidDesigns = $designs;
+        $freeDesigns = collect();
+
+        return view('frontend.cart-payment', compact('freeDesigns', 'paidDesigns', 'customer', 'razorpayKey', 'amount', 'totalAmount'));
     }
 
     public function claimDesign(Request $request)
@@ -433,7 +478,6 @@ class FrontendController extends Controller
             return back()->with('error', 'Package limit exceeded.');
         }
 
-        // Create order with 0 amount (package claim)
         Order::create([
             'customer_id' => $customer->id,
             'design_id' => $design->id,
@@ -447,25 +491,89 @@ class FrontendController extends Controller
         Cart::where('customer_id', $customer->id)->where('design_id', $design->id)->delete();
         session(['cart_count' => Cart::where('customer_id', $customer->id)->count()]);
 
-        return view('frontend.purchase-success', compact('design'));
+        $designs = collect([$design]);
+        return view('frontend.purchase-success', compact('designs'));
+    }
+
+    public function claimDesignsBulk(Request $request)
+    {
+        if (!session('customer_id')) {
+            return redirect()->route('frontend.login');
+        }
+
+        $customer = Customer::find(session('customer_id'));
+        $designIds = $request->design_ids;
+        $designs = Design::whereIn('id', $designIds)->get();
+
+        $remaining = $customer->total_design - $customer->downloaded_design;
+
+        if (!$customer->hasActivePackage() || $remaining <= 0) {
+            return back()->with('error', 'Package limit exceeded.');
+        }
+
+        $claimable = $designs->take($remaining);
+
+        foreach ($claimable as $design) {
+            $alreadyClaimed = Order::where('customer_id', $customer->id)
+                ->where('design_id', $design->id)
+                ->where('status', 'paid')
+                ->exists();
+
+            if (!$alreadyClaimed) {
+                Order::create([
+                    'customer_id' => $customer->id,
+                    'design_id' => $design->id,
+                    'amount' => 0,
+                    'razorpay_payment_id' => 'package_claim',
+                    'status' => 'paid',
+                ]);
+                $customer->increment('downloaded_design');
+            }
+        }
+
+        Cart::where('customer_id', $customer->id)->whereIn('design_id', $designIds)->delete();
+        session(['cart_count' => Cart::where('customer_id', $customer->id)->count()]);
+
+        return view('frontend.purchase-success', compact('designs'));
     }
 
     public function paymentSuccess(Request $request)
     {
-        Order::create([
-            'customer_id' => session('customer_id'),
-            'design_id' => $request->design_id,
-            'amount' => $request->amount / 100,
-            'razorpay_order_id' => $request->razorpay_order_id,
-            'razorpay_payment_id' => $request->razorpay_payment_id,
-            'status' => 'paid',
-        ]);
+        $customerId = session('customer_id');
+        $designIds = $request->design_ids ? (is_array($request->design_ids) ? $request->design_ids : [$request->design_ids]) : [$request->design_id];
+        $freeDesignIds = $request->free_design_ids ? (is_array($request->free_design_ids) ? $request->free_design_ids : []) : [];
 
-        Cart::where('customer_id', session('customer_id'))->where('design_id', $request->design_id)->delete();
-        session(['cart_count' => Cart::where('customer_id', session('customer_id'))->count()]);
+        $customer = Customer::find($customerId);
 
-        $design = Design::findOrFail($request->design_id);
-        return view('frontend.purchase-success', compact('design'));
+        // Create orders for paid designs
+        foreach ($designIds as $designId) {
+            Order::create([
+                'customer_id' => $customerId,
+                'design_id' => $designId,
+                'amount' => $request->amount / 100 / count($designIds),
+                'razorpay_order_id' => $request->razorpay_order_id ?? '',
+                'razorpay_payment_id' => $request->razorpay_payment_id,
+                'status' => 'paid',
+            ]);
+        }
+
+        // Claim free designs via package
+        foreach ($freeDesignIds as $designId) {
+            Order::create([
+                'customer_id' => $customerId,
+                'design_id' => $designId,
+                'amount' => 0,
+                'razorpay_payment_id' => 'package_claim',
+                'status' => 'paid',
+            ]);
+            $customer->increment('downloaded_design');
+        }
+
+        Cart::where('customer_id', $customerId)->whereIn('design_id', array_merge($designIds, $freeDesignIds))->delete();
+        session(['cart_count' => Cart::where('customer_id', $customerId)->count()]);
+
+        $designs = Design::whereIn('id', array_merge($designIds, $freeDesignIds))->get();
+        return view('frontend.purchase-success', compact('designs'));
     }
 
     public function myDesigns()
