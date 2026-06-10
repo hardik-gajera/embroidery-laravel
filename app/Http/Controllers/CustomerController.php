@@ -41,14 +41,14 @@ class CustomerController extends Controller
     {
         $customer->load('package');
         $packageOrders = $this->getPackageHistory($customer);
-        $packages = \App\Models\DesignPackage::where('state', 'confirm')->get();
+        $packages = \App\Models\DesignPackage::whereIn('state', ['confirm', 'draft'])->get();
         return view('customers.show', compact('customer', 'packageOrders', 'packages'));
     }
 
     public function edit(Customer $customer)
     {
         $packageOrders = $this->getPackageHistory($customer);
-        $packages = \App\Models\DesignPackage::where('state', 'confirm')->get();
+        $packages = \App\Models\DesignPackage::whereIn('state', ['confirm', 'draft'])->get();
         return view('customers.edit', compact('customer', 'packageOrders', 'packages'));
     }
 
