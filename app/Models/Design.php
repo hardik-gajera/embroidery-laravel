@@ -25,26 +25,24 @@ class Design extends Model
 
     public static function generateUniqueCode()
     {
-        // Get the latest design code
-        $latestCode = self::whereNotNull('design_code')
-            ->where('design_code', '!=', '')
-            ->orderByRaw('CAST(design_code AS UNSIGNED) DESC')
+        $prefix = now()->format('my'); // MMYY e.g. "0626" for June 2026
+
+        $latestCode = self::where('design_code', 'like', $prefix . '%')
+            ->orderBy('design_code', 'desc')
             ->value('design_code');
-        
+
         if (!$latestCode) {
-            // Start with this pattern based on existing codes
-            return '09200001';
+            return $prefix . '0001';
         }
-        
-        // Extract numeric part and increment
-        $numericPart = (int) $latestCode;
-        $nextCode = str_pad($numericPart + 1, 8, '0', STR_PAD_LEFT);
-        
-        // Ensure uniqueness
+
+        $sequence = (int) substr($latestCode, 4) + 1;
+        $nextCode = $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+
         while (self::where('design_code', $nextCode)->exists()) {
-            $nextCode = str_pad((int)$nextCode + 1, 8, '0', STR_PAD_LEFT);
+            $sequence++;
+            $nextCode = $prefix . str_pad($sequence, 4, '0', STR_PAD_LEFT);
         }
-        
+
         return $nextCode;
     }
 
