@@ -89,6 +89,14 @@
                     </div>
                 </div>
                 <div class="mt-4 flex items-center gap-3">
+                    <!-- Add Downloaded Design -->
+                    <form method="POST" action="{{ route('customers.add-download', $customer) }}" class="flex items-center gap-2">
+                        @csrf
+                        <input type="number" name="count" value="1" min="1" max="{{ $customer->total_design - $customer->downloaded_design }}" class="w-20 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-50">
+                        <button type="submit" class="px-3.5 py-2 text-xs font-medium text-primary-600 bg-primary-50 border border-primary-200 rounded-lg hover:bg-primary-100 transition">
+                            <i class="fas fa-plus mr-1"></i>Add Offline Download
+                        </button>
+                    </form>
                     <form method="POST" action="{{ route('customers.remove-package', $customer) }}" onsubmit="return confirm('Are you sure you want to remove this package?')">
                         @csrf @method('DELETE')
                         <button type="submit" class="px-3.5 py-2 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition">

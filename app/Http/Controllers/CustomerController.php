@@ -104,6 +104,22 @@ class CustomerController extends Controller
         return redirect()->route('customers.show', $customer)->with('success', 'Package removed successfully.');
     }
 
+    public function addDownload(Request $request, Customer $customer)
+    {
+        $request->validate(['count' => 'required|integer|min:1']);
+
+        $remaining = $customer->total_design - $customer->downloaded_design;
+        $count = min($request->count, $remaining);
+
+        if ($count <= 0) {
+            return back()->with('error', 'No downloads remaining in this package.');
+        }
+
+        $customer->increment('downloaded_design', $count);
+
+        return redirect()->route('customers.show', $customer)->with('success', "$count offline download(s) added successfully.");
+    }
+
     private function getPackageHistory(Customer $customer)
     {
         // Get from orders table (new purchases via Laravel)
