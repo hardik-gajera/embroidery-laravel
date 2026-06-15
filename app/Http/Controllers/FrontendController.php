@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\Customer;
 use App\Models\ContactMessage;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class FrontendController extends Controller
 {
@@ -262,19 +264,42 @@ class FrontendController extends Controller
             return back()->withErrors(['mobile_no' => 'No account found with this mobile number.'])->withInput();
         }
         
-        // Generate a simple 6-digit reset code
         $resetCode = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
         
-        // Store reset code in session with expiry
         session([
             'password_reset_mobile' => $request->mobile_no,
             'password_reset_code' => $resetCode,
             'password_reset_expires' => now()->addMinutes(10)
         ]);
         
-        // For demo purposes, show the code (in production, send SMS)
+        // Send reset code via Dovesoft SMS
+        $this->sendResetSms($request->mobile_no, $resetCode);
+        
         return redirect()->route('frontend.reset-password')
-            ->with('success', "Reset code sent! Use code: {$resetCode} (Valid for 10 minutes)");
+            ->with('success', 'Reset code sent to your mobile number. Valid for 10 minutes.');
+    }
+
+    private function sendResetSms($mobile, $code)
+    {
+        try {
+            $config = config('sms');
+            $smsContent = str_replace('{otp}', $code, $config['otp']['template']);
+
+            Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'key' => $config['sms_api']['key'],
+            ])->post($config['sms_api']['url'], [
+                'listsms' => [[
+                    'sms' => $smsContent,
+                    'mobiles' => $mobile,
+                    'senderid' => $config['sms_api']['sender_id'],
+                    'entityid' => $config['sms_api']['entity_id'],
+                    'tempid' => $config['sms_api']['template_id'],
+                ]]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Password reset SMS failed: ' . $e->getMessage());
+        }
     }
 
     public function showResetPassword()
@@ -294,12 +319,10 @@ class FrontendController extends Controller
             'password' => 'required|string|min:6|confirmed',
         ]);
         
-        // Debug session data
         $sessionMobile = session('password_reset_mobile');
         $sessionCode = session('password_reset_code');
         $sessionExpires = session('password_reset_expires');
         
-        // Check if reset session is valid
         if (!$sessionMobile || !$sessionCode) {
             return redirect()->route('frontend.forgot-password')
                 ->with('error', 'Invalid reset session. Please request a new reset code.');
@@ -317,9 +340,7 @@ class FrontendController extends Controller
         $storedCode = trim($sessionCode);
         
         if ($inputCode !== $storedCode) {
-            return back()->withErrors([
-                'reset_code' => "Invalid reset code. Expected: {$storedCode}, Got: {$inputCode}"
-            ])->withInput();
+            return back()->withErrors(['reset_code' => 'Invalid reset code.'])->withInput();
         }
         
         // Update password
