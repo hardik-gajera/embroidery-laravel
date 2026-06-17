@@ -98,24 +98,39 @@
     </div>
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
         @foreach($featuredDesigns as $design)
-        <a href="{{ route('frontend.design.detail', $design->id) }}" class="card-hover bg-white rounded-2xl overflow-hidden group">
+        <div class="card-hover bg-white rounded-2xl overflow-hidden group relative">
             @if($design->design_img)
-                <div class="aspect-[4/3] overflow-hidden">
+                <div class="aspect-[4/3] overflow-hidden cursor-pointer" onclick="openHomeGallery({{ $loop->index }})">
                     <img src="{{ asset('storage/' . $design->design_img) }}" alt="{{ $design->name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                 </div>
             @else
-                <div class="aspect-[4/3] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                <div class="aspect-[4/3] bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center cursor-pointer" onclick="openHomeGallery({{ $loop->index }})">
                     <i class="fas fa-swatchbook text-gray-600 text-3xl group-hover:scale-110 transition-transform"></i>
                 </div>
             @endif
+            
+            <!-- Quick Action Buttons -->
+            <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onclick="openHomeGallery({{ $loop->index }})" 
+                    class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-600 hover:text-primary-600 transition-colors shadow-md mb-2" title="View Gallery">
+                    <i class="fas fa-images text-xs"></i>
+                </button>
+                <a href="{{ route('frontend.design.detail', $design->id) }}" 
+                    class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-600 hover:text-primary-600 transition-colors shadow-md mb-2" title="View Details">
+                    <i class="fas fa-eye text-xs"></i>
+                </a>
+            </div>
+            
             <div class="p-4">
-                <h3 class="font-semibold text-gray-800 text-sm truncate group-hover:text-primary-600 transition-colors">{{ $design->name }}</h3>
+                <a href="{{ route('frontend.design.detail', $design->id) }}">
+                    <h3 class="font-semibold text-gray-800 text-sm truncate group-hover:text-primary-600 transition-colors">{{ $design->name }}</h3>
+                </a>
                 <p class="text-xs text-gray-400 mt-1">₹{{ number_format($design->design_price) }}</p>
                 @if($design->design_code)
                     <p class="text-[10px] text-primary-500 font-medium">{{ $design->design_code }}</p>
                 @endif
             </div>
-        </a>
+        </div>
         @endforeach
     </div>
     <div class="text-center mt-10">
@@ -241,4 +256,364 @@
         </div>
     </div>
 </section>
+
+<!-- Image Gallery Popup -->
+<div id="homeGalleryModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80">
+    <div class="relative max-w-5xl max-h-[90vh] w-full mx-4">
+        <!-- Close Button -->
+        <button onclick="closeHomeGallery()" class="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors z-10">
+            <i class="fas fa-times text-2xl"></i>
+        </button>
+        
+        <!-- Main Image Container with Zoom -->
+        <div class="relative bg-white rounded-2xl overflow-hidden shadow-2xl">
+            <!-- Image Container with Zoom and Pan -->
+            <div class="aspect-[4/3] bg-gray-100 flex items-center justify-center overflow-hidden relative">
+                <div id="imageZoomContainer" class="w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing">
+                    <img id="homeGalleryImage" src="" alt="Design" class="max-w-full max-h-full object-contain transition-transform duration-300 cursor-zoom-in select-none">
+                    <div id="homeNoImagePlaceholder" class="hidden text-gray-400 text-center">
+                        <i class="fas fa-image text-6xl mb-4 block"></i>
+                        <p class="text-lg font-medium">No Image Available</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Zoom Controls -->
+            <div class="absolute top-4 left-4 flex flex-col gap-2">
+                <button onclick="zoomIn()" class="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center text-gray-700 hover:bg-white hover:text-primary-600 transition-all shadow-lg" title="Zoom In">
+                    <i class="fas fa-search-plus text-sm"></i>
+                </button>
+                <button onclick="zoomOut()" class="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center text-gray-700 hover:bg-white hover:text-primary-600 transition-all shadow-lg" title="Zoom Out">
+                    <i class="fas fa-search-minus text-sm"></i>
+                </button>
+                <button onclick="resetZoom()" class="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center text-gray-700 hover:bg-white hover:text-primary-600 transition-all shadow-lg" title="Reset Zoom">
+                    <i class="fas fa-expand-arrows-alt text-sm"></i>
+                </button>
+            </div>
+            
+            <!-- Navigation Arrows -->
+            <button onclick="prevHomeImage()" class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 rounded-full flex items-center justify-center text-gray-700 hover:bg-white hover:text-primary-600 transition-all shadow-lg" title="Previous">
+                <i class="fas fa-chevron-left text-lg"></i>
+            </button>
+            <button onclick="nextHomeImage()" class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 rounded-full flex items-center justify-center text-gray-700 hover:bg-white hover:text-primary-600 transition-all shadow-lg" title="Next">
+                <i class="fas fa-chevron-right text-lg"></i>
+            </button>
+            
+            <!-- Design Info Overlay -->
+            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-6 text-white">
+                <div class="flex items-end justify-between">
+                    <div class="flex-1">
+                        <h3 id="homeGalleryTitle" class="text-xl font-heading font-bold mb-2"></h3>
+                        <div class="flex items-center gap-4 text-sm">
+                            <span id="homeGalleryCode" class="bg-white/20 px-3 py-1 rounded-full font-mono"></span>
+                            <span id="homeGalleryPrice" class="bg-primary-600 px-3 py-1 rounded-full font-semibold"></span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 ml-4">
+                        <span id="homeGalleryCounter" class="text-sm bg-white/20 px-3 py-1 rounded-full"></span>
+                        <a id="homeGalleryViewButton" href="#" class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold transition-all hover:scale-105">
+                            <i class="fas fa-external-link-alt text-sm"></i>Go to Design
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Thumbnails Strip -->
+        <div class="mt-4 max-h-24 overflow-hidden">
+            <div id="homeThumbnailStrip" class="flex gap-2 justify-center">
+                <!-- Thumbnails will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Home Gallery functionality
+let currentHomeDesigns = [];
+let currentHomeIndex = 0;
+let currentZoom = 1;
+let panX = 0;
+let panY = 0;
+let isPanning = false;
+let startX = 0;
+let startY = 0;
+
+// Populate home designs array from server data
+const homeDesigns = [
+    @foreach($featuredDesigns as $design)
+    {
+        id: {{ $design->id }},
+        name: @json($design->name),
+        code: @json($design->design_code),
+        price: {{ $design->design_price }},
+        image: @json($design->design_img ? asset('storage/' . $design->design_img) : ''),
+        url: @json(route('frontend.design.detail', $design->id))
+    }@if(!$loop->last),@endif
+    @endforeach
+];
+
+function openHomeGallery(index) {
+    currentHomeDesigns = homeDesigns;
+    currentHomeIndex = index;
+    currentZoom = 1;
+    panX = 0;
+    panY = 0;
+    const modal = document.getElementById('homeGalleryModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    updateHomeGalleryContent();
+    generateHomeThumbnails();
+    setupHomePanEvents();
+    document.body.style.overflow = 'hidden';
+}
+
+function closeHomeGallery() {
+    const modal = document.getElementById('homeGalleryModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = 'auto';
+    resetZoom();
+}
+
+function nextHomeImage() {
+    currentHomeIndex = (currentHomeIndex + 1) % currentHomeDesigns.length;
+    updateHomeGalleryContent();
+    updateHomeActiveThumbnail();
+    resetZoom();
+}
+
+function prevHomeImage() {
+    currentHomeIndex = (currentHomeIndex - 1 + currentHomeDesigns.length) % currentHomeDesigns.length;
+    updateHomeGalleryContent();
+    updateHomeActiveThumbnail();
+    resetZoom();
+}
+
+function zoomIn() {
+    currentZoom = Math.min(currentZoom * 1.2, 3);
+    applyZoom();
+}
+
+function zoomOut() {
+    currentZoom = Math.max(currentZoom / 1.2, 0.5);
+    applyZoom();
+}
+
+function resetZoom() {
+    currentZoom = 1;
+    panX = 0;
+    panY = 0;
+    applyZoom();
+}
+
+function applyZoom() {
+    const image = document.getElementById('homeGalleryImage');
+    const container = document.getElementById('imageZoomContainer');
+    
+    image.style.transform = `scale(${currentZoom}) translate(${panX}px, ${panY}px)`;
+    
+    if (currentZoom > 1) {
+        image.style.cursor = 'grab';
+        container.style.cursor = 'grab';
+    } else {
+        image.style.cursor = 'zoom-in';
+        container.style.cursor = 'zoom-in';
+        panX = 0;
+        panY = 0;
+    }
+}
+
+function setupHomePanEvents() {
+    const container = document.getElementById('imageZoomContainer');
+    const image = document.getElementById('homeGalleryImage');
+    
+    // Mouse events
+    container.addEventListener('mousedown', startHomePan);
+    document.addEventListener('mousemove', doHomePan);
+    document.addEventListener('mouseup', endHomePan);
+    
+    // Touch events for mobile
+    container.addEventListener('touchstart', startHomePanTouch, { passive: false });
+    document.addEventListener('touchmove', doHomePanTouch, { passive: false });
+    document.addEventListener('touchend', endHomePan);
+}
+
+function startHomePan(e) {
+    if (currentZoom <= 1) return;
+    
+    isPanning = true;
+    startX = e.clientX - panX;
+    startY = e.clientY - panY;
+    
+    const container = document.getElementById('imageZoomContainer');
+    const image = document.getElementById('homeGalleryImage');
+    container.style.cursor = 'grabbing';
+    image.style.cursor = 'grabbing';
+    
+    e.preventDefault();
+}
+
+function startHomePanTouch(e) {
+    if (currentZoom <= 1 || e.touches.length !== 1) return;
+    
+    isPanning = true;
+    const touch = e.touches[0];
+    startX = touch.clientX - panX;
+    startY = touch.clientY - panY;
+    
+    e.preventDefault();
+}
+
+function doHomePan(e) {
+    if (!isPanning || currentZoom <= 1) return;
+    
+    const newPanX = e.clientX - startX;
+    const newPanY = e.clientY - startY;
+    
+    // Limit panning to keep image within reasonable bounds
+    const maxPan = 200 * currentZoom;
+    panX = Math.max(-maxPan, Math.min(maxPan, newPanX));
+    panY = Math.max(-maxPan, Math.min(maxPan, newPanY));
+    
+    applyZoom();
+    e.preventDefault();
+}
+
+function doHomePanTouch(e) {
+    if (!isPanning || currentZoom <= 1 || e.touches.length !== 1) return;
+    
+    const touch = e.touches[0];
+    const newPanX = touch.clientX - startX;
+    const newPanY = touch.clientY - startY;
+    
+    // Limit panning to keep image within reasonable bounds
+    const maxPan = 200 * currentZoom;
+    panX = Math.max(-maxPan, Math.min(maxPan, newPanX));
+    panY = Math.max(-maxPan, Math.min(maxPan, newPanY));
+    
+    applyZoom();
+    e.preventDefault();
+}
+
+function endHomePan() {
+    isPanning = false;
+    
+    if (currentZoom > 1) {
+        const container = document.getElementById('imageZoomContainer');
+        const image = document.getElementById('homeGalleryImage');
+        container.style.cursor = 'grab';
+        image.style.cursor = 'grab';
+    }
+}
+
+function updateHomeGalleryContent() {
+    const design = currentHomeDesigns[currentHomeIndex];
+    const galleryImage = document.getElementById('homeGalleryImage');
+    const noImagePlaceholder = document.getElementById('homeNoImagePlaceholder');
+    
+    if (design.image) {
+        galleryImage.src = design.image;
+        galleryImage.classList.remove('hidden');
+        noImagePlaceholder.classList.add('hidden');
+    } else {
+        galleryImage.classList.add('hidden');
+        noImagePlaceholder.classList.remove('hidden');
+    }
+    
+    document.getElementById('homeGalleryTitle').textContent = design.name;
+    document.getElementById('homeGalleryCode').textContent = design.code || 'No Code';
+    document.getElementById('homeGalleryPrice').textContent = '₹' + new Intl.NumberFormat().format(design.price);
+    document.getElementById('homeGalleryCounter').textContent = `${currentHomeIndex + 1} of ${currentHomeDesigns.length}`;
+    document.getElementById('homeGalleryViewButton').href = design.url;
+}
+
+function generateHomeThumbnails() {
+    const thumbnailStrip = document.getElementById('homeThumbnailStrip');
+    thumbnailStrip.innerHTML = '';
+    
+    currentHomeDesigns.forEach((design, index) => {
+        const thumb = document.createElement('div');
+        thumb.className = `w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${
+            index === currentHomeIndex ? 'border-primary-500 ring-2 ring-primary-200' : 'border-transparent hover:border-gray-300'
+        }`;
+        thumb.onclick = () => {
+            currentHomeIndex = index;
+            updateHomeGalleryContent();
+            updateHomeActiveThumbnail();
+            resetZoom();
+        };
+        
+        if (design.image) {
+            thumb.innerHTML = `<img src="${design.image}" alt="${design.name}" class="w-full h-full object-cover">`;
+        } else {
+            thumb.innerHTML = `<div class="w-full h-full bg-gray-200 flex items-center justify-center"><i class="fas fa-image text-gray-400"></i></div>`;
+        }
+        
+        thumbnailStrip.appendChild(thumb);
+    });
+}
+
+function updateHomeActiveThumbnail() {
+    const thumbnails = document.querySelectorAll('#homeThumbnailStrip > div');
+    thumbnails.forEach((thumb, index) => {
+        if (index === currentHomeIndex) {
+            thumb.className = thumb.className.replace('border-transparent hover:border-gray-300', 'border-primary-500 ring-2 ring-primary-200');
+        } else {
+            thumb.className = thumb.className.replace('border-primary-500 ring-2 ring-primary-200', 'border-transparent hover:border-gray-300');
+        }
+    });
+}
+
+// Mouse wheel zoom for home gallery
+document.getElementById('imageZoomContainer').addEventListener('wheel', function(e) {
+    e.preventDefault();
+    if (e.deltaY < 0) {
+        zoomIn();
+    } else {
+        zoomOut();
+    }
+});
+
+// Click to zoom for home gallery
+document.getElementById('homeGalleryImage').addEventListener('click', function() {
+    if (currentZoom < 3) {
+        zoomIn();
+    } else {
+        resetZoom();
+    }
+});
+
+// Close modal on escape key (enhanced for home gallery)
+document.addEventListener('keydown', function(e) {
+    const homeModal = document.getElementById('homeGalleryModal');
+    if (!homeModal.classList.contains('hidden')) {
+        if (e.key === 'Escape') {
+            closeHomeGallery();
+        }
+        if (e.key === 'ArrowRight') {
+            nextHomeImage();
+        }
+        if (e.key === 'ArrowLeft') {
+            prevHomeImage();
+        }
+        if (e.key === '=' || e.key === '+') {
+            zoomIn();
+        }
+        if (e.key === '-') {
+            zoomOut();
+        }
+        if (e.key === '0') {
+            resetZoom();
+        }
+    }
+});
+
+// Close modal on outside click (home gallery)
+document.getElementById('homeGalleryModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeHomeGallery();
+    }
+});
+</script>
 @endsection

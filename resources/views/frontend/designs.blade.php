@@ -214,13 +214,28 @@
         
         <!-- Main Image Container -->
         <div class="relative bg-white rounded-2xl overflow-hidden shadow-2xl">
-            <!-- Image -->
-            <div class="aspect-[4/3] bg-gray-100 flex items-center justify-center overflow-hidden">
-                <img id="galleryImage" src="" alt="Design" class="w-full h-full object-cover">
-                <div id="noImagePlaceholder" class="hidden text-gray-400 text-center">
-                    <i class="fas fa-image text-6xl mb-4 block"></i>
-                    <p class="text-lg font-medium">No Image Available</p>
+            <!-- Image Container with Zoom and Pan -->
+            <div class="aspect-[4/3] bg-gray-100 flex items-center justify-center overflow-hidden relative">
+                <div id="imageZoomContainer" class="w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing">
+                    <img id="galleryImage" src="" alt="Design" class="max-w-full max-h-full object-contain transition-transform duration-300 cursor-zoom-in select-none">
+                    <div id="noImagePlaceholder" class="hidden text-gray-400 text-center">
+                        <i class="fas fa-image text-6xl mb-4 block"></i>
+                        <p class="text-lg font-medium">No Image Available</p>
+                    </div>
                 </div>
+            </div>
+            
+            <!-- Zoom Controls -->
+            <div class="absolute top-4 left-4 flex flex-col gap-2">
+                <button onclick="zoomIn()" class="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center text-gray-700 hover:bg-white hover:text-primary-600 transition-all shadow-lg" title="Zoom In">
+                    <i class="fas fa-search-plus text-sm"></i>
+                </button>
+                <button onclick="zoomOut()" class="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center text-gray-700 hover:bg-white hover:text-primary-600 transition-all shadow-lg" title="Zoom Out">
+                    <i class="fas fa-search-minus text-sm"></i>
+                </button>
+                <button onclick="resetZoom()" class="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center text-gray-700 hover:bg-white hover:text-primary-600 transition-all shadow-lg" title="Reset Zoom">
+                    <i class="fas fa-expand-arrows-alt text-sm"></i>
+                </button>
             </div>
             
             <!-- Navigation Arrows -->
@@ -265,6 +280,12 @@
 // Gallery functionality
 let currentDesigns = [];
 let currentIndex = 0;
+let currentZoom = 1;
+let panX = 0;
+let panY = 0;
+let isPanning = false;
+let startX = 0;
+let startY = 0;
 
 // Populate designs array from server data
 const designs = [
@@ -284,11 +305,15 @@ const designs = [
 function openGallery(index) {
     currentDesigns = designs;
     currentIndex = index;
+    currentZoom = 1;
+    panX = 0;
+    panY = 0;
     const modal = document.getElementById('galleryModal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     updateGalleryContent();
     generateThumbnails();
+    setupPanEvents();
     document.body.style.overflow = 'hidden';
 }
 
@@ -297,18 +322,55 @@ function closeGallery() {
     modal.classList.add('hidden');
     modal.classList.remove('flex');
     document.body.style.overflow = 'auto';
+    resetZoom();
 }
 
 function nextImage() {
     currentIndex = (currentIndex + 1) % currentDesigns.length;
     updateGalleryContent();
     updateActiveThumbnail();
+    resetZoom();
 }
 
 function prevImage() {
     currentIndex = (currentIndex - 1 + currentDesigns.length) % currentDesigns.length;
     updateGalleryContent();
     updateActiveThumbnail();
+    resetZoom();
+}
+
+function zoomIn() {
+    currentZoom = Math.min(currentZoom * 1.2, 3);
+    applyZoom();
+}
+
+function zoomOut() {
+    currentZoom = Math.max(currentZoom / 1.2, 0.5);
+    applyZoom();
+}
+
+function resetZoom() {
+    currentZoom = 1;
+    panX = 0;
+    panY = 0;
+    applyZoom();
+}
+
+function applyZoom() {
+    const image = document.getElementById('galleryImage');
+    const container = document.getElementById('imageZoomContainer');
+    
+    image.style.transform = `scale(${currentZoom}) translate(${panX}px, ${panY}px)`;
+    
+    if (currentZoom > 1) {
+        image.style.cursor = 'grab';
+        container.style.cursor = 'grab';
+    } else {
+        image.style.cursor = 'zoom-in';
+        container.style.cursor = 'zoom-in';
+        panX = 0;
+        panY = 0;
+    }
 }
 
 function updateGalleryContent() {
@@ -346,6 +408,7 @@ function generateThumbnails() {
             currentIndex = index;
             updateGalleryContent();
             updateActiveThumbnail();
+            resetZoom();
         };
         
         if (design.image) {
@@ -369,16 +432,139 @@ function updateActiveThumbnail() {
     });
 }
 
+function setupPanEvents() {
+    const container = document.getElementById('imageZoomContainer');
+    
+    // Mouse events
+    container.addEventListener('mousedown', startPan);
+    document.addEventListener('mousemove', doPan);
+    document.addEventListener('mouseup', endPan);
+    
+    // Touch events for mobile
+    container.addEventListener('touchstart', startPanTouch, { passive: false });
+    document.addEventListener('touchmove', doPanTouch, { passive: false });
+    document.addEventListener('touchend', endPan);
+}
+
+function startPan(e) {
+    if (currentZoom <= 1) return;
+    
+    isPanning = true;
+    startX = e.clientX - panX;
+    startY = e.clientY - panY;
+    
+    const container = document.getElementById('imageZoomContainer');
+    const image = document.getElementById('galleryImage');
+    container.style.cursor = 'grabbing';
+    image.style.cursor = 'grabbing';
+    
+    e.preventDefault();
+}
+
+function startPanTouch(e) {
+    if (currentZoom <= 1 || e.touches.length !== 1) return;
+    
+    isPanning = true;
+    const touch = e.touches[0];
+    startX = touch.clientX - panX;
+    startY = touch.clientY - panY;
+    
+    e.preventDefault();
+}
+
+function doPan(e) {
+    if (!isPanning || currentZoom <= 1) return;
+    
+    const newPanX = e.clientX - startX;
+    const newPanY = e.clientY - startY;
+    
+    // Limit panning to keep image within reasonable bounds
+    const maxPan = 200 * currentZoom;
+    panX = Math.max(-maxPan, Math.min(maxPan, newPanX));
+    panY = Math.max(-maxPan, Math.min(maxPan, newPanY));
+    
+    applyZoom();
+    e.preventDefault();
+}
+
+function doPanTouch(e) {
+    if (!isPanning || currentZoom <= 1 || e.touches.length !== 1) return;
+    
+    const touch = e.touches[0];
+    const newPanX = touch.clientX - startX;
+    const newPanY = touch.clientY - startY;
+    
+    // Limit panning to keep image within reasonable bounds
+    const maxPan = 200 * currentZoom;
+    panX = Math.max(-maxPan, Math.min(maxPan, newPanX));
+    panY = Math.max(-maxPan, Math.min(maxPan, newPanY));
+    
+    applyZoom();
+    e.preventDefault();
+}
+
+function endPan() {
+    isPanning = false;
+    
+    if (currentZoom > 1) {
+        const container = document.getElementById('imageZoomContainer');
+        const image = document.getElementById('galleryImage');
+        container.style.cursor = 'grab';
+        image.style.cursor = 'grab';
+    }
+}
+
+// Mouse wheel zoom
+document.addEventListener('DOMContentLoaded', function() {
+    const zoomContainer = document.getElementById('imageZoomContainer');
+    if (zoomContainer) {
+        zoomContainer.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            if (e.deltaY < 0) {
+                zoomIn();
+            } else {
+                zoomOut();
+            }
+        });
+    }
+});
+
+// Click to zoom
+document.addEventListener('DOMContentLoaded', function() {
+    const galleryImage = document.getElementById('galleryImage');
+    if (galleryImage) {
+        galleryImage.addEventListener('click', function() {
+            if (currentZoom < 3) {
+                zoomIn();
+            } else {
+                resetZoom();
+            }
+        });
+    }
+});
+
 // Close modal on escape key
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeGallery();
-    }
-    if (e.key === 'ArrowRight') {
-        nextImage();
-    }
-    if (e.key === 'ArrowLeft') {
-        prevImage();
+    const modal = document.getElementById('galleryModal');
+    if (modal && !modal.classList.contains('hidden')) {
+        if (e.key === 'Escape') {
+            closeGallery();
+        }
+        if (e.key === 'ArrowRight') {
+            nextImage();
+        }
+        if (e.key === 'ArrowLeft') {
+            prevImage();
+        }
+        if (e.key === '=' || e.key === '+') {
+            zoomIn();
+        }
+        if (e.key === '-') {
+            zoomOut();
+        }
+        if (e.key === '0') {
+            resetZoom();
+        }
     }
 });
 

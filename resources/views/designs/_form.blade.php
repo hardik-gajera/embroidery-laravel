@@ -56,7 +56,7 @@
 
     <div>
         <label class="text-sm font-medium text-gray-700 mb-1.5 block">Price (₹) <span class="text-red-400">*</span></label>
-        <input type="number" name="design_price" value="{{ old('design_price', $design->design_price ?? 225) }}" step="0.01" min="0" required
+        <input type="number" name="design_price" value="{{ old('design_price', $design->design_price ?? 300) }}" step="0.01" min="0" required
             class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-50 transition @error('design_price') border-red-300 @enderror">
         @error('design_price')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
     </div>

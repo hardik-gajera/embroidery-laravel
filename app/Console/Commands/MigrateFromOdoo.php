@@ -209,7 +209,7 @@ class MigrateFromOdoo extends Command
                             'needle_color' => $d->needle_color,
                             'design_format' => $d->design_format ?? 'emb',
                             'design_img' => $imgPath,
-                            'design_price' => $d->design_price ?? 225,
+                            'design_price' => $d->design_price ?? 300,
                             'description' => $d->description,
                             'created_at' => $d->create_date,
                             'updated_at' => $d->write_date,

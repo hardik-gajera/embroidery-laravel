@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('needle_color')->nullable();
             $table->string('design_format')->default('emb');
             $table->string('design_img')->nullable();
-            $table->decimal('design_price', 10, 2)->default(225.00);
+            $table->decimal('design_price', 10, 2)->default(300.00);
             $table->text('description')->nullable();
             $table->timestamps();
         });
