@@ -259,6 +259,158 @@
                 }
             });
         });
+
+        // CSRF Token Refresh and Form Error Handling
+        function refreshCSRFToken() {
+            return fetch('{{ route("csrf-token") }}', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.token) {
+                    // Update meta tag
+                    document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.token);
+                    // Update all CSRF input fields
+                    document.querySelectorAll('input[name="_token"]').forEach(input => {
+                        input.value = data.token;
+                    });
+                    return data.token;
+                }
+                throw new Error('Failed to get new token');
+            })
+            .catch(error => {
+                console.log('CSRF token refresh failed:', error);
+                return null;
+            });
+        }
+
+        // Enhanced form submission with CSRF error handling
+        document.addEventListener('submit', function(e) {
+            const form = e.target;
+            if (form.tagName === 'FORM' && form.method.toLowerCase() === 'post') {
+                e.preventDefault();
+                
+                // Show loading state
+                const submitButton = form.querySelector('button[type="submit"]');
+                const originalText = submitButton ? submitButton.innerHTML : '';
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+                }
+
+                const formData = new FormData(form);
+                
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                .then(response => {
+                    if (response.status === 419) {
+                        // Token expired, refresh and retry
+                        return refreshCSRFToken().then(newToken => {
+                            if (newToken) {
+                                formData.set('_token', newToken);
+                                return fetch(form.action, {
+                                    method: 'POST',
+                                    body: formData,
+                                    headers: {
+                                        'X-Requested-With': 'XMLHttpRequest',
+                                        'X-CSRF-TOKEN': newToken
+                                    }
+                                });
+                            } else {
+                                throw new Error('Failed to refresh token');
+                            }
+                        });
+                    }
+                    return response;
+                })
+                .then(response => {
+                    if (response.ok || response.status === 302) {
+                        // Success - let the form submit normally
+                        form.submit();
+                    } else {
+                        return response.text().then(text => {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.log('Form submission error:', error);
+                    
+                    // Reset button state
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalText;
+                    }
+                    
+                    // Show error message
+                    if (error.message.includes('419') || error.message.includes('token')) {
+                        showToast('Session expired. Please refresh the page and try again.', 'error');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 2000);
+                    } else {
+                        showToast('An error occurred. Please try again.', 'error');
+                    }
+                });
+            }
+        });
+
+        // Auto-refresh CSRF token every 30 minutes
+        setInterval(() => {
+            refreshCSRFToken();
+        }, 30 * 60 * 1000); // 30 minutes
+
+        // Refresh token on page focus (when user returns to tab)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                refreshCSRFToken();
+            }
+        });
+
+        // Toast notification function
+        function showToast(message, type = 'success') {
+            // Remove existing toasts
+            document.querySelectorAll('#dynamic-toast').forEach(toast => toast.remove());
+            
+            const colors = {
+                success: { bg: 'bg-green-100', border: 'border-green-200', icon: 'fa-check text-green-500', shadow: 'shadow-green-100' },
+                error: { bg: 'bg-red-100', border: 'border-red-200', icon: 'fa-exclamation text-red-500', shadow: 'shadow-red-100' },
+                info: { bg: 'bg-blue-100', border: 'border-blue-200', icon: 'fa-info text-blue-500', shadow: 'shadow-blue-100' }
+            };
+            
+            const color = colors[type] || colors.info;
+            
+            const toast = document.createElement('div');
+            toast.id = 'dynamic-toast';
+            toast.className = 'fixed top-20 right-5 z-50 animate-slide-up';
+            toast.innerHTML = `
+                <div class="bg-white border ${color.border} px-5 py-3.5 rounded-xl shadow-2xl ${color.shadow} flex items-center gap-3">
+                    <div class="w-8 h-8 ${color.bg} rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas ${color.icon} text-sm"></i>
+                    </div>
+                    <p class="text-sm font-medium text-gray-700">${message}</p>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100px)';
+                toast.style.transition = 'all 0.4s';
+                setTimeout(() => toast.remove(), 400);
+            }, 4000);
+        }
     </script>
 
     @stack('scripts')

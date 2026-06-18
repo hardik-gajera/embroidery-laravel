@@ -21,6 +21,14 @@ Route::get('/clear-cache', function() {
     Artisan::call('config:clear');
     return 'All caches cleared!';
 });
+
+// CSRF Token refresh route
+Route::get('/csrf-token', function() {
+    return response()->json([
+        'token' => csrf_token()
+    ]);
+})->name('csrf-token');
+
 Route::get('/', [FrontendController::class, 'home'])->name('home');
 Route::get('/all-designs', [FrontendController::class, 'allDesigns'])->name('frontend.all-designs');
 Route::get('/category/{id}', [FrontendController::class, 'categories'])->name('frontend.categories');

@@ -11,6 +11,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -66,6 +67,21 @@ class Handler extends ExceptionHandler
         // Handle mobile API routes with JSON responses
         if ($request->is('api/mobile/*')) {
             return $this->handleMobileApiException($request, $e);
+        }
+
+        // Handle 419 CSRF Token Mismatch for web requests
+        if ($this->isHttpException($e) && $e->getStatusCode() === 419) {
+            // If AJAX request, return JSON response
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'message' => 'Page expired. Please refresh and try again.',
+                    'error' => 'CSRF token mismatch',
+                    'code' => 419
+                ], 419);
+            }
+            
+            // For web requests, return custom 419 page
+            return response()->view('errors.419', [], 419);
         }
 
         return parent::render($request, $e);
