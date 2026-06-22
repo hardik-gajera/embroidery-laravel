@@ -332,6 +332,83 @@
 							"path": ["cart", "1"]
 						}
 					}
+				},
+				{
+					"name": "Checkout Cart",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/cart/checkout",
+							"host": ["{{base_url}}"],
+							"path": ["cart", "checkout"]
+						}
+					},
+					"response": [],
+					"description": "Get pricing info for cart items. Returns which designs are free (via package) and which need payment."
+				},
+				{
+					"name": "Claim Designs Bulk (All Free)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"design_ids\": [1, 2, 3]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/claim-designs-bulk",
+							"host": ["{{base_url}}"],
+							"path": ["claim-designs-bulk"]
+						}
+					},
+					"response": [],
+					"description": "Claim multiple designs for free when user has active package with remaining downloads."
+				},
+				{
+					"name": "Bulk Payment Success",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"design_ids\": [1, 2, 3],\n    \"amount\": 30.00,\n    \"razorpay_payment_id\": \"pay_test123\",\n    \"razorpay_order_id\": \"order_test123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/payment/bulk-success",
+							"host": ["{{base_url}}"],
+							"path": ["payment", "bulk-success"]
+						}
+					},
+					"response": [],
+					"description": "Complete bulk payment via Razorpay for cart designs that require payment."
 				}
 			]
 		},

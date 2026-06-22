@@ -266,16 +266,19 @@ class FrontendController extends Controller
         
         $resetCode = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
         
-        session([
-            'password_reset_mobile' => $request->mobile_no,
-            'password_reset_code' => $resetCode,
-            'password_reset_expires' => now()->addMinutes(10)
+        // Store reset code in database (100% reliable)
+        $customer->update([
+            'reset_code' => $resetCode,
+            'reset_code_expires_at' => now()->addMinutes(10),
         ]);
+        
+        session(['password_reset_mobile' => trim($request->mobile_no)]);
+        session()->save();
         
         // Send reset code via Dovesoft SMS
         $this->sendResetSms($request->mobile_no, $resetCode);
         
-        return redirect()->route('frontend.reset-password')
+        return redirect()->route('frontend.reset-password', ['mobile' => trim($request->mobile_no)])
             ->with('success', 'Reset code sent to your mobile number. Valid for 10 minutes.');
     }
 
@@ -302,14 +305,16 @@ class FrontendController extends Controller
         }
     }
 
-    public function showResetPassword()
+    public function showResetPassword(Request $request)
     {
-        if (!session('password_reset_mobile')) {
+        $mobile = session('password_reset_mobile') ?? $request->query('mobile');
+        
+        if (!$mobile) {
             return redirect()->route('frontend.forgot-password')
                 ->with('error', 'Please request password reset first.');
         }
         
-        return view('frontend.reset-password');
+        return view('frontend.reset-password', ['reset_mobile' => $mobile]);
     }
 
     public function resetPassword(Request $request)
@@ -319,42 +324,48 @@ class FrontendController extends Controller
             'password' => 'required|string|min:6|confirmed',
         ]);
         
-        $sessionMobile = session('password_reset_mobile');
-        $sessionCode = session('password_reset_code');
-        $sessionExpires = session('password_reset_expires');
+        $mobile = $request->input('_reset_mobile') ?? session('password_reset_mobile');
+        $mobile = $mobile ? trim($mobile) : null;
         
-        if (!$sessionMobile || !$sessionCode) {
+        if (!$mobile) {
             return redirect()->route('frontend.forgot-password')
                 ->with('error', 'Invalid reset session. Please request a new reset code.');
         }
         
-        // Check if reset code is expired
-        if (now()->gt($sessionExpires)) {
-            session()->forget(['password_reset_mobile', 'password_reset_code', 'password_reset_expires']);
-            return redirect()->route('frontend.forgot-password')
-                ->with('error', 'Reset code has expired. Please request a new one.');
-        }
-        
-        // Verify reset code (trim whitespace and ensure string comparison)
-        $inputCode = trim($request->reset_code);
-        $storedCode = trim($sessionCode);
-        
-        if ($inputCode !== $storedCode) {
-            return back()->withErrors(['reset_code' => 'Invalid reset code.'])->withInput();
-        }
-        
-        // Update password
-        $customer = Customer::where('mobile_no', $sessionMobile)->first();
+        // Get customer and verify reset code from database
+        $customer = Customer::where('mobile_no', $mobile)->first();
         
         if (!$customer) {
             return redirect()->route('frontend.forgot-password')
                 ->with('error', 'Customer not found. Please try again.');
         }
         
-        $customer->update(['password' => $request->password]);
+        if (!$customer->reset_code) {
+            // Code already used (double submit) - redirect to login
+            return redirect()->route('frontend.login')
+                ->with('success', 'Password reset successfully! Please login with your new password.');
+        }
         
-        // Clear reset session
-        session()->forget(['password_reset_mobile', 'password_reset_code', 'password_reset_expires']);
+        // Check expiry
+        if (now()->gt($customer->reset_code_expires_at)) {
+            $customer->update(['reset_code' => null, 'reset_code_expires_at' => null]);
+            return redirect()->route('frontend.forgot-password')
+                ->with('error', 'Reset code has expired. Please request a new one.');
+        }
+        
+        // Verify reset code
+        if (trim($request->reset_code) !== trim($customer->reset_code)) {
+            return back()->withErrors(['reset_code' => 'Invalid reset code.'])->withInput();
+        }
+        
+        // Update password and clear reset code
+        $customer->update([
+            'password' => $request->password,
+            'reset_code' => null,
+            'reset_code_expires_at' => null,
+        ]);
+        
+        session()->forget(['password_reset_mobile']);
         
         return redirect()->route('frontend.login')
             ->with('success', 'Password reset successfully! Please login with your new password.');

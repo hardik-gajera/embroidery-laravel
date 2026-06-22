@@ -56,7 +56,10 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForceJsonResponse::class
     Route::get('/my-designs', [OrderController::class, 'myDesigns']);
     Route::post('/buy-now', [OrderController::class, 'buyNow']);
     Route::post('/claim-design', [OrderController::class, 'claimDesign']);
+    Route::post('/claim-designs-bulk', [OrderController::class, 'claimDesignsBulk']);
+    Route::post('/cart/checkout', [OrderController::class, 'cartCheckout']);
     Route::post('/payment/success', [OrderController::class, 'paymentSuccess']);
+    Route::post('/payment/bulk-success', [OrderController::class, 'bulkPaymentSuccess']);
     
     // Design downloads
     Route::get('/designs/{id}/download', [DesignController::class, 'download']);

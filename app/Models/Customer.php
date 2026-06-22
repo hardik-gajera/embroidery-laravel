@@ -11,7 +11,7 @@ class Customer extends Authenticatable
 {
     use HasFactory, HasApiTokens;
 
-    protected $fillable = ['name', 'email', 'mobile_no', 'downloaded_design', 'total_design', 'password', 'package_id', 'package_start_date', 'package_end_date'];
+    protected $fillable = ['name', 'email', 'mobile_no', 'downloaded_design', 'total_design', 'password', 'package_id', 'package_start_date', 'package_end_date', 'reset_code', 'reset_code_expires_at'];
 
     protected $casts = [
         'package_start_date' => 'date',
