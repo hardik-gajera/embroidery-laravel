@@ -38,7 +38,7 @@ Route::middleware(['api', \App\Http\Middleware\ForceJsonResponse::class])->prefi
     Route::get('/packages/{id}', [PackageController::class, 'show']);
 });
 
-// Protected API routes
+// Protected API routes (with JSON response)
 Route::middleware(['auth:sanctum', \App\Http\Middleware\ForceJsonResponse::class])->prefix('mobile')->group(function () {
     // Authentication
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -61,13 +61,15 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForceJsonResponse::class
     Route::post('/payment/success', [OrderController::class, 'paymentSuccess']);
     Route::post('/payment/bulk-success', [OrderController::class, 'bulkPaymentSuccess']);
     
-    // Design downloads
-    Route::get('/designs/{id}/download', [DesignController::class, 'download']);
-    
     // Packages
     Route::get('/my-packages', [PackageController::class, 'myPackages']);
     Route::post('/package/buy', [PackageController::class, 'buy']);
     Route::post('/package/payment/success', [PackageController::class, 'paymentSuccess']);
+});
+
+// File download routes (without JSON middleware)
+Route::middleware(['auth:sanctum'])->prefix('mobile')->group(function () {
+    Route::get('/designs/{id}/download', [DesignController::class, 'download']);
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
