@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ApiResponse
 {
@@ -14,6 +15,11 @@ class ApiResponse
 
         // Only apply to API routes
         if (!$request->is('api/*')) {
+            return $response;
+        }
+
+        // Skip processing for binary file responses (downloads)
+        if ($response instanceof BinaryFileResponse) {
             return $response;
         }
 
