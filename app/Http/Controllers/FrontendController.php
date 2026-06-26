@@ -264,6 +264,13 @@ class FrontendController extends Controller
             return back()->withErrors(['mobile_no' => 'No account found with this mobile number.'])->withInput();
         }
         
+        // Prevent duplicate OTP sends within 60 seconds
+        if ($customer->reset_code && $customer->reset_code_expires_at && now()->lt($customer->reset_code_expires_at->subMinutes(9))) {
+            session(['password_reset_mobile' => trim($request->mobile_no)]);
+            return redirect()->route('frontend.reset-password', ['mobile' => trim($request->mobile_no)])
+                ->with('success', 'Reset code already sent. Please check your SMS.');
+        }
+        
         $resetCode = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
         
         // Store reset code in database (100% reliable)

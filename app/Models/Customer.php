@@ -16,6 +16,7 @@ class Customer extends Authenticatable
     protected $casts = [
         'package_start_date' => 'date',
         'package_end_date' => 'date',
+        'reset_code_expires_at' => 'datetime',
     ];
 
     public function package()

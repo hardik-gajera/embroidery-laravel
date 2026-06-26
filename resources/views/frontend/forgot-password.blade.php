@@ -26,10 +26,22 @@
                     @error('mobile_no')<p class="text-red-500 text-xs mt-1.5"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>@enderror
                 </div>
 
-                <button type="submit" class="btn-glow w-full py-3.5 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl font-semibold hover:from-orange-700 hover:to-red-700 transition-all shadow-lg shadow-orange-200 hover:scale-[1.02]">
+                <button type="submit" id="sendOtpBtn" class="btn-glow w-full py-3.5 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-xl font-semibold hover:from-orange-700 hover:to-red-700 transition-all shadow-lg shadow-orange-200 hover:scale-[1.02]">
                     Send Reset Code
                 </button>
             </form>
+
+            <script>
+                document.querySelector('form').addEventListener('submit', function(e) {
+                    var btn = document.getElementById('sendOtpBtn');
+                    if (btn.disabled) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    btn.disabled = true;
+                    btn.textContent = 'Sending...';
+                });
+            </script>
 
             <div class="text-center mt-6">
                 <a href="{{ route('frontend.login') }}" class="text-sm text-primary-600 hover:text-primary-700 font-medium">
