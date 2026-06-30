@@ -104,6 +104,19 @@ class CustomerController extends Controller
         return redirect()->route('customers.show', $customer)->with('success', 'Package removed successfully.');
     }
 
+    public function updatePackage(Request $request, Customer $customer)
+    {
+        $request->validate([
+            'downloaded_design' => 'required|integer|min:0|max:' . $customer->total_design,
+        ]);
+
+        $customer->update([
+            'downloaded_design' => $request->downloaded_design,
+        ]);
+
+        return redirect()->back()->with('success', 'Downloaded designs count updated successfully.');
+    }
+
     public function addDownload(Request $request, Customer $customer)
     {
         $request->validate(['count' => 'required|integer|min:1']);

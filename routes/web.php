@@ -75,6 +75,7 @@ Route::middleware('auth')->prefix('admin')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('customers', CustomerController::class);
     Route::post('customers/{customer}/assign-package', [CustomerController::class, 'assignPackage'])->name('customers.assign-package');
+    Route::put('customers/{customer}/update-package', [CustomerController::class, 'updatePackage'])->name('customers.update-package');
     Route::delete('customers/{customer}/remove-package', [CustomerController::class, 'removePackage'])->name('customers.remove-package');
     Route::post('customers/{customer}/add-download', [CustomerController::class, 'addDownload'])->name('customers.add-download');
     Route::resource('categories', CategoryController::class)->except('show');
