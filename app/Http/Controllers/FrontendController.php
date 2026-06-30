@@ -396,6 +396,17 @@ class FrontendController extends Controller
             return redirect()->route('frontend.login')->with('error', 'Please login first.');
         }
 
+        // Check if already purchased
+        $alreadyPurchased = Order::where('customer_id', session('customer_id'))
+            ->where('design_id', $request->design_id)
+            ->where('status', 'paid')
+            ->exists();
+
+        if ($alreadyPurchased) {
+            return redirect()->route('frontend.my-designs', ['highlight' => $request->design_id])
+                ->with('success', 'You already own this design. Download it from here.');
+        }
+
         Cart::firstOrCreate([
             'customer_id' => session('customer_id'),
             'design_id' => $request->design_id,
@@ -433,7 +444,8 @@ class FrontendController extends Controller
             ->exists();
 
         if ($alreadyPurchased) {
-            return redirect()->route('frontend.my-designs')->with('success', 'You already own this design. Download it from here.');
+            return redirect()->route('frontend.my-designs', ['highlight' => $design->id])
+                ->with('success', 'You already own this design. Download it from here.');
         }
 
         // Check active package

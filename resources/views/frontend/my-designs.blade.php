@@ -16,7 +16,7 @@
     @if($orders->count() > 0)
     <div class="space-y-4">
         @foreach($orders as $order)
-        <div class="bg-white rounded-2xl overflow-hidden flex items-center gap-4 p-4" style="box-shadow: 0 4px 20px -2px rgba(0,0,0,0.08);">
+        <div id="design-{{ $order->design_id }}" class="bg-white rounded-2xl overflow-hidden flex items-center gap-4 p-4 transition-all duration-500" style="box-shadow: 0 4px 20px -2px rgba(0,0,0,0.08);">
             @if($order->design && $order->design->design_img)
                 <img src="{{ asset('storage/' . $order->design->design_img) }}" class="w-20 h-20 rounded-xl object-cover flex-shrink-0">
             @else
@@ -66,3 +66,27 @@
     @endif
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var params = new URLSearchParams(window.location.search);
+    var highlight = params.get('highlight');
+    if (highlight) {
+        var el = document.getElementById('design-' + highlight);
+        if (el) {
+            setTimeout(function() {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+            el.style.outline = '3px solid #f97316';
+            el.style.outlineOffset = '2px';
+            el.style.boxShadow = '0 0 20px rgba(249, 115, 22, 0.3)';
+            setTimeout(function() {
+                el.style.outline = 'none';
+                el.style.boxShadow = '';
+            }, 4000);
+        }
+    }
+});
+</script>
+@endpush

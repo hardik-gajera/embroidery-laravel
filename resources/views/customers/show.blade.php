@@ -113,17 +113,19 @@
                     <h4 class="text-xs font-semibold text-gray-700 mb-3"><i class="fas fa-edit mr-1"></i>Edit Downloaded Designs Count</h4>
                     <form method="POST" action="{{ route('customers.update-package', $customer) }}">
                         @csrf @method('PUT')
-                        <div class="flex items-end gap-4">
+                        <div class="flex items-center gap-4">
                             <div>
                                 <label class="block text-xs font-semibold text-gray-600 mb-1.5">Downloaded Designs</label>
                                 <input type="number" name="downloaded_design" value="{{ $customer->downloaded_design }}" min="0" max="{{ $customer->total_design }}" required
                                     class="w-40 px-3.5 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-50">
-                                <p class="text-[10px] text-gray-400 mt-1">Max: {{ $customer->total_design }}</p>
                             </div>
-                            <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
-                                <i class="fas fa-save mr-1.5"></i>Update
-                            </button>
+                            <div class="pt-5">
+                                <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+                                    <i class="fas fa-save mr-1.5"></i>Update
+                                </button>
+                            </div>
                         </div>
+                        <p class="text-[10px] text-gray-400 mt-1.5">Max: {{ $customer->total_design }}</p>
                     </form>
                 </div>
             @else
