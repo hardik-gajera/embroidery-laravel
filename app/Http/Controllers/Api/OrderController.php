@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Design;
 use App\Models\Cart;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class OrderController extends Controller
 {
@@ -35,6 +36,42 @@ class OrderController extends Controller
         return response()->json([
             'success' => true,
             'data' => $orders
+        ]);
+    }
+
+    public function createRazorpayOrder(Request $request)
+    {
+        $request->validate([
+            'amount'   => 'required|numeric|min:1',
+            'receipt'  => 'nullable|string|max:40',
+        ]);
+
+        $key    = config('services.razorpay.key');
+        $secret = config('services.razorpay.secret');
+
+        $response = Http::withBasicAuth($key, $secret)
+            ->post('https://api.razorpay.com/v1/orders', [
+                'amount'   => (int) round($request->amount * 100), // paise
+                'currency' => 'INR',
+                'receipt'  => $request->receipt ?? 'rcpt_' . uniqid(),
+            ]);
+
+        if ($response->failed()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create Razorpay order',
+                'error'   => $response->json(),
+            ], 502);
+        }
+
+        $order = $response->json();
+
+        return response()->json([
+            'success'          => true,
+            'razorpay_order_id' => $order['id'],
+            'amount'           => $order['amount'],
+            'currency'         => $order['currency'],
+            'key'              => $key,
         ]);
     }
 

@@ -54,6 +54,7 @@ Route::middleware(['auth:sanctum', \App\Http\Middleware\ForceJsonResponse::class
     // Orders & Purchases
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/my-designs', [OrderController::class, 'myDesigns']);
+    Route::post('/create-razorpay-order', [OrderController::class, 'createRazorpayOrder']);
     Route::post('/buy-now', [OrderController::class, 'buyNow']);
     Route::post('/claim-design', [OrderController::class, 'claimDesign']);
     Route::post('/claim-designs-bulk', [OrderController::class, 'claimDesignsBulk']);

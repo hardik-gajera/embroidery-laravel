@@ -62,6 +62,35 @@
     </div>
 </section>
 
+<!-- Active Package Banner (logged-in customers only) -->
+@if(session('customer_id') && isset($activePackage) && $activePackage)
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
+    <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-check-circle text-green-600 text-xl"></i>
+        </div>
+        <div class="flex-1">
+            <div class="flex flex-wrap items-center gap-2 mb-1">
+                <span class="text-sm font-bold text-gray-800">{{ $activePackage->name }}</span>
+                <span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-full uppercase">Active</span>
+                <span class="text-xs text-gray-400">Expires {{ $customer->package_end_date->format('d M Y') }}</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="flex-1 max-w-xs">
+                    <div class="h-2 bg-green-200 rounded-full overflow-hidden">
+                        <div class="h-full bg-green-500 rounded-full transition-all" style="width: {{ $customer->total_design > 0 ? min(100, $customer->downloaded_design / $customer->total_design * 100) : 0 }}%"></div>
+                    </div>
+                </div>
+                <span class="text-xs text-gray-500">{{ $customer->downloaded_design }} / {{ $customer->total_design }} designs used &nbsp;·&nbsp; <span class="font-semibold text-green-600">{{ $customer->total_design - $customer->downloaded_design }} remaining</span></span>
+            </div>
+        </div>
+        <a href="{{ route('frontend.my-packages') }}" class="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 transition-all">
+            <i class="fas fa-box text-xs"></i> View Package
+        </a>
+    </div>
+</section>
+@endif
+
 <!-- Features -->
 <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-reveal">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">

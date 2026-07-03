@@ -105,10 +105,39 @@
                                 <span class="text-sm font-medium text-primary-700 hidden sm:inline">{{ session('customer_name') }}</span>
                                 <i class="fas fa-chevron-down text-[10px] text-primary-400"></i>
                             </button>
-                            <div id="profile-menu" class="hidden absolute right-0 top-full mt-2 w-52 bg-white rounded-xl border border-gray-100 shadow-xl shadow-gray-200/50 py-2 z-50">
+                            <div id="profile-menu" class="hidden absolute right-0 top-full mt-2 w-64 bg-white rounded-xl border border-gray-100 shadow-xl shadow-gray-200/50 py-2 z-50">
                                 <div class="px-4 py-2 border-b border-gray-100">
                                     <p class="text-sm font-semibold text-gray-800">{{ session('customer_name') }}</p>
                                 </div>
+                                {{-- Active Package Status --}}
+                                @if(session('customer_id'))
+                                    @php $navCustomer = app('App\Models\Customer')->with('package')->find(session('customer_id')); @endphp
+                                    @if($navCustomer && $navCustomer->package && $navCustomer->package_end_date && $navCustomer->package_end_date->isFuture())
+                                        <div class="mx-3 my-2 p-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-100 rounded-xl">
+                                            <div class="flex items-center justify-between mb-1.5">
+                                                <span class="text-[10px] font-bold text-green-700 uppercase tracking-wide flex items-center gap-1">
+                                                    <i class="fas fa-bolt text-yellow-500"></i> Active Package
+                                                </span>
+                                                <span class="text-[10px] text-green-600 font-semibold">{{ $navCustomer->package_end_date->format('d M Y') }}</span>
+                                            </div>
+                                            <p class="text-xs font-semibold text-gray-800 truncate">{{ $navCustomer->package->name }}</p>
+                                            <div class="mt-1.5">
+                                                <div class="flex justify-between text-[10px] text-gray-500 mb-1">
+                                                    <span>{{ $navCustomer->downloaded_design }} used</span>
+                                                    <span class="font-semibold text-green-600">{{ $navCustomer->total_design - $navCustomer->downloaded_design }} left</span>
+                                                </div>
+                                                <div class="h-1.5 bg-green-200 rounded-full overflow-hidden">
+                                                    <div class="h-full bg-green-500 rounded-full" style="width: {{ $navCustomer->total_design > 0 ? min(100, $navCustomer->downloaded_design / $navCustomer->total_design * 100) : 0 }}%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="mx-3 my-2 p-3 bg-gray-50 border border-gray-100 rounded-xl">
+                                            <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">No Active Package</p>
+                                            <a href="{{ route('frontend.packages') }}" class="text-xs text-primary-600 font-semibold hover:underline">Browse packages →</a>
+                                        </div>
+                                    @endif
+                                @endif
                                 <a href="{{ route('frontend.my-designs') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-primary-50 hover:text-primary-600 transition-all">
                                     <i class="fas fa-swatchbook w-4 text-center text-xs"></i>My Designs
                                 </a>

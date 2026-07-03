@@ -23,7 +23,17 @@ class FrontendController extends Controller
         $parentCategories = Category::parents()->withCount('children')->get();
         $featuredDesigns = Design::latest()->take(12)->get();
         $packages = DesignPackage::where('state', 'confirm')->latest()->take(4)->get();
-        return view('frontend.home', compact('parentCategories', 'featuredDesigns', 'packages'));
+
+        $customer = null;
+        $activePackage = null;
+        if (session('customer_id')) {
+            $customer = Customer::with('package')->find(session('customer_id'));
+            if ($customer && $customer->package && $customer->package_end_date && $customer->package_end_date->isFuture()) {
+                $activePackage = $customer->package;
+            }
+        }
+
+        return view('frontend.home', compact('parentCategories', 'featuredDesigns', 'packages', 'customer', 'activePackage'));
     }
 
     public function allDesigns(Request $request)
