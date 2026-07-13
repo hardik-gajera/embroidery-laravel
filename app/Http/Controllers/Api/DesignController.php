@@ -22,7 +22,8 @@ class DesignController extends BaseApiController
                 $query->where('category_id', $request->category_id);
             }
             
-            $designs = $query->paginate(12);
+            $perPage = $request->input('per_page', 12);
+            $designs = $query->paginate($perPage);
             
             return $this->successResponse('Designs retrieved successfully', $designs->toArray());
         } catch (\Exception $e) {
@@ -53,10 +54,11 @@ class DesignController extends BaseApiController
         }
     }
 
-    public function featured()
+    public function featured(Request $request)
     {
         try {
-            $designs = Design::latest()->take(8)->get();
+            $perPage = $request->input('per_page', 12);
+            $designs = Design::latest()->paginate($perPage);
             
             return $this->successResponse('Featured designs retrieved successfully', $designs->toArray());
         } catch (\Exception $e) {

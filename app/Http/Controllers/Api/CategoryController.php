@@ -9,9 +9,10 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::parents()->withCount('children')->get();
+        $perPage = $request->input('per_page', 12);
+        $categories = Category::parents()->withCount('children')->paginate($perPage);
         
         return response()->json([
             'success' => true,
@@ -32,10 +33,11 @@ class CategoryController extends Controller
         ]);
     }
 
-    public function designs($id)
+    public function designs(Request $request, $id)
     {
         $category = Category::findOrFail($id);
-        $designs = Design::where('category_id', $id)->paginate(12);
+        $perPage = $request->input('per_page', 12);
+        $designs = Design::where('category_id', $id)->paginate($perPage);
         
         return response()->json([
             'success' => true,

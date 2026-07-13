@@ -26,16 +26,24 @@ class OrderController extends Controller
 
     public function myDesigns(Request $request)
     {
+        $perPage = $request->input('per_page', 10);
+
         $orders = Order::with('design')
                       ->where('customer_id', $request->user()->id)
                       ->whereNotNull('design_id')
                       ->where('status', 'paid')
                       ->latest()
-                      ->get();
+                      ->paginate($perPage);
         
         return response()->json([
             'success' => true,
-            'data' => $orders
+            'data' => $orders->items(),
+            'pagination' => [
+                'current_page' => $orders->currentPage(),
+                'last_page' => $orders->lastPage(),
+                'per_page' => $orders->perPage(),
+                'total' => $orders->total(),
+            ]
         ]);
     }
 
