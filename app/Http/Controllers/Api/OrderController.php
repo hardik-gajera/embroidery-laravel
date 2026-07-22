@@ -92,16 +92,20 @@ class OrderController extends Controller
         $design = Design::findOrFail($request->design_id);
         $customer = $request->user();
 
-        $alreadyPurchased = Order::where('customer_id', $customer->id)
+        $existingOrder = Order::where('customer_id', $customer->id)
             ->where('design_id', $design->id)
             ->where('status', 'paid')
-            ->exists();
+            ->first();
 
-        if ($alreadyPurchased) {
+        if ($existingOrder) {
             return response()->json([
-                'success' => false,
-                'message' => 'You already own this design'
-            ], 400);
+                'success' => true,
+                'data' => [
+                    'already_purchased' => true,
+                    'order' => $existingOrder,
+                    'design' => $design,
+                ]
+            ]);
         }
 
         if ($customer->hasActivePackage()) {
@@ -146,6 +150,22 @@ class OrderController extends Controller
 
         $customer = $request->user();
         $design = Design::findOrFail($request->design_id);
+
+        $existingOrder = Order::where('customer_id', $customer->id)
+            ->where('design_id', $design->id)
+            ->where('status', 'paid')
+            ->first();
+
+        if ($existingOrder) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'already_purchased' => true,
+                    'order' => $existingOrder,
+                    'design' => $design,
+                ]
+            ]);
+        }
 
         if (!$customer->hasActivePackage() || $customer->downloaded_design >= $customer->total_design) {
             return response()->json([
@@ -220,36 +240,43 @@ class OrderController extends Controller
         $designIds = $request->design_ids;
         $designs = Design::whereIn('id', $designIds)->get();
 
-        // Filter out already purchased designs
-        $purchasedIds = Order::where('customer_id', $customer->id)
+        // Separate already purchased designs
+        $purchasedOrders = Order::with('design')
+            ->where('customer_id', $customer->id)
             ->whereIn('design_id', $designIds)
             ->where('status', 'paid')
-            ->pluck('design_id')->toArray();
+            ->get();
+
+        $purchasedIds = $purchasedOrders->pluck('design_id')->toArray();
+        $alreadyPurchasedDesigns = $purchasedOrders;
 
         $designs = $designs->filter(fn($d) => !in_array($d->id, $purchasedIds))->values();
 
         if ($designs->isEmpty()) {
             return response()->json([
-                'success' => false,
-                'message' => 'You already own all these designs'
-            ], 400);
+                'success' => true,
+                'data' => [
+                    'already_purchased' => true,
+                    'already_purchased_orders' => $alreadyPurchasedDesigns,
+                    'new_designs' => [],
+                ]
+            ]);
         }
 
         // Check active package
         if ($customer->hasActivePackage()) {
             $remaining = $customer->total_design - $customer->downloaded_design;
             if ($remaining >= $designs->count()) {
-                // All can be claimed free via package
                 return response()->json([
                     'success' => true,
                     'data' => [
                         'can_claim_all_free' => true,
                         'designs' => $designs,
+                        'already_purchased_orders' => $alreadyPurchasedDesigns,
                         'remaining_downloads' => $remaining
                     ]
                 ]);
             } elseif ($remaining > 0) {
-                // Some free, some paid
                 $freeDesigns = $designs->take($remaining)->values();
                 $paidDesigns = $designs->slice($remaining)->values();
                 $totalAmount = $paidDesigns->sum('design_price');
@@ -261,6 +288,7 @@ class OrderController extends Controller
                         'free_designs' => $freeDesigns,
                         'paid_designs' => $paidDesigns,
                         'total_amount' => $totalAmount,
+                        'already_purchased_orders' => $alreadyPurchasedDesigns,
                         'remaining_downloads' => $remaining
                     ]
                 ]);
@@ -277,6 +305,7 @@ class OrderController extends Controller
                 'free_designs' => [],
                 'paid_designs' => $designs,
                 'total_amount' => $totalAmount,
+                'already_purchased_orders' => $alreadyPurchasedDesigns,
                 'remaining_downloads' => 0
             ]
         ]);
