@@ -83,6 +83,42 @@ class OrderController extends Controller
         ]);
     }
 
+    public function createRazorpayTestOrder(Request $request)
+    {
+        $request->validate([
+            'amount'  => 'required|numeric|min:1',
+            'receipt' => 'nullable|string|max:40',
+        ]);
+
+        $key    = config('services.razorpay_test.key');
+        $secret = config('services.razorpay_test.secret');
+
+        $response = Http::withBasicAuth($key, $secret)
+            ->post('https://api.razorpay.com/v1/orders', [
+                'amount'   => (int) round($request->amount * 100),
+                'currency' => 'INR',
+                'receipt'  => $request->receipt ?? 'rcpt_' . uniqid(),
+            ]);
+
+        if ($response->failed()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create Razorpay test order',
+                'error'   => $response->json(),
+            ], 502);
+        }
+
+        $order = $response->json();
+
+        return response()->json([
+            'success'           => true,
+            'razorpay_order_id' => $order['id'],
+            'amount'            => $order['amount'],
+            'currency'          => $order['currency'],
+            'key'               => $key,
+        ]);
+    }
+
     public function buyNow(Request $request)
     {
         $request->validate([
