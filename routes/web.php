@@ -56,6 +56,21 @@ Route::get('/my-packages', [FrontendController::class, 'myPackages'])->name('fro
 Route::get('/packages', [FrontendController::class, 'packages'])->name('frontend.packages');
 Route::get('/about', [FrontendController::class, 'about'])->name('frontend.about');
 Route::get('/contact', [FrontendController::class, 'contact'])->name('frontend.contact');
+Route::get('/privacy', fn() => response()->json([
+    'success' => true,
+    'data' => [
+        'title'        => 'Privacy Policy',
+        'last_updated' => '2025-01-01',
+        'content'      => [
+            ['heading' => 'Information We Collect',    'body' => 'We collect your name, email address, and mobile number when you register. We also collect purchase and download history to manage your account.'],
+            ['heading' => 'How We Use Your Information','body' => 'Your information is used to process orders, send OTP verification messages, manage your design packages, and provide customer support.'],
+            ['heading' => 'Payment Information',       'body' => 'Payments are processed securely through Razorpay. We do not store your card or banking details on our servers.'],
+            ['heading' => 'Data Sharing',              'body' => 'We do not sell or share your personal information with third parties except as required to process payments or comply with legal obligations.'],
+            ['heading' => 'Data Security',             'body' => 'We implement industry-standard security measures to protect your personal data from unauthorized access or disclosure.'],
+            ['heading' => 'Contact Us',                'body' => 'If you have any questions about this Privacy Policy, please contact us at support@aaradhyadesigngallery.com.'],
+        ],
+    ],
+]))->name('privacy');
 Route::post('/contact', [FrontendController::class, 'contactSend'])->name('frontend.contact.send');
 Route::get('/package/{id}', [FrontendController::class, 'packageDetail'])->name('frontend.package.detail');
 Route::post('/package/buy', [FrontendController::class, 'buyPackage'])->name('frontend.package.buy');
