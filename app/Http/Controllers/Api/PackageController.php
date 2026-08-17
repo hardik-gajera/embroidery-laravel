@@ -63,12 +63,14 @@ class PackageController extends Controller
         ]);
 
         $package = DesignPackage::findOrFail($request->package_id);
+        $isTestUser = $request->user() && $request->user()->mobile_no === '+919999999999';
 
         return response()->json([
             'success' => true,
             'data' => [
                 'package' => $package,
-                'amount' => $package->price
+                'amount' => $package->price,
+                'razorpay_key' => $isTestUser ? config('services.razorpay_test.key') : config('services.razorpay.key'),
             ]
         ]);
     }
