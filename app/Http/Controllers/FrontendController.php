@@ -216,7 +216,11 @@ class FrontendController extends Controller
     public function login(Request $request)
     {
         $request->validate(['mobile_no' => 'required', 'password' => 'required']);
-        $customer = Customer::where('mobile_no', $request->mobile_no)->first();
+        $mobile = $request->mobile_no;
+        if (!str_starts_with($mobile, '+91')) {
+            $mobile = '+91' . ltrim($mobile, '0');
+        }
+        $customer = Customer::where('mobile_no', $mobile)->first();
 
         if ($customer && Hash::check($request->password, $customer->password)) {
             session(['customer_id' => $customer->id, 'customer_name' => $customer->name]);
@@ -245,7 +249,12 @@ class FrontendController extends Controller
             'password' => 'required|string|min:6|confirmed',
         ]);
 
-        $customer = Customer::create($request->only('name', 'email', 'mobile_no', 'password'));
+        $mobile = $request->mobile_no;
+        if (!str_starts_with($mobile, '+91')) {
+            $mobile = '+91' . ltrim($mobile, '0');
+        }
+
+        $customer = Customer::create(array_merge($request->only('name', 'email', 'password'), ['mobile_no' => $mobile]));
         session(['customer_id' => $customer->id, 'customer_name' => $customer->name, 'cart_count' => 0]);
 
         // Clear any admin-related intended URLs and redirect to home
@@ -267,8 +276,13 @@ class FrontendController extends Controller
     public function forgotPassword(Request $request)
     {
         $request->validate(['mobile_no' => 'required']);
-        
-        $customer = Customer::where('mobile_no', $request->mobile_no)->first();
+
+        $mobile = $request->mobile_no;
+        if (!str_starts_with($mobile, '+91')) {
+            $mobile = '+91' . ltrim($mobile, '0');
+        }
+
+        $customer = Customer::where('mobile_no', $mobile)->first();
         
         if (!$customer) {
             return back()->withErrors(['mobile_no' => 'No account found with this mobile number.'])->withInput();
@@ -276,26 +290,24 @@ class FrontendController extends Controller
         
         // Prevent duplicate OTP sends within 60 seconds
         if ($customer->reset_code && $customer->reset_code_expires_at && now()->lt($customer->reset_code_expires_at->subMinutes(9))) {
-            session(['password_reset_mobile' => trim($request->mobile_no)]);
-            return redirect()->route('frontend.reset-password', ['mobile' => trim($request->mobile_no)])
+            session(['password_reset_mobile' => $mobile]);
+            return redirect()->route('frontend.reset-password', ['mobile' => $mobile])
                 ->with('success', 'Reset code already sent. Please check your SMS.');
         }
         
         $resetCode = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
         
-        // Store reset code in database (100% reliable)
         $customer->update([
             'reset_code' => $resetCode,
             'reset_code_expires_at' => now()->addMinutes(10),
         ]);
         
-        session(['password_reset_mobile' => trim($request->mobile_no)]);
+        session(['password_reset_mobile' => $mobile]);
         session()->save();
         
-        // Send reset code via Dovesoft SMS
-        $this->sendResetSms($request->mobile_no, $resetCode);
+        $this->sendResetSms($mobile, $resetCode);
         
-        return redirect()->route('frontend.reset-password', ['mobile' => trim($request->mobile_no)])
+        return redirect()->route('frontend.reset-password', ['mobile' => $mobile])
             ->with('success', 'Reset code sent to your mobile number. Valid for 10 minutes.');
     }
 
