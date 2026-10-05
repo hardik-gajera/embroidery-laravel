@@ -13,7 +13,7 @@ class PackageController extends Controller
 {
     public function index()
     {
-        $packages = DesignPackage::where('state', 'confirm')->get();
+        $packages = DesignPackage::where('state', 'confirm')->latest()->get();
         
         return response()->json([
             'success' => true,
